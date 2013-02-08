@@ -37,6 +37,13 @@
 -spec apps() -> [atom()].
 apps() -> env(apps).
 
+%% @doc A list of {Mod, Fun} tuples, representing functions that receive
+%%      a single parameter, that being the existing context. In Django,
+%%      parameter is the request object, but there is no analog to this
+%%      a plain template engine.
+-spec context_processors() -> [{atom(), atom()}].
+context_processors() -> env(context_processors).
+
 %% @doc Returns `true' if the application is configured in "debug" mode,
 %%      `false' otherwise.
 -spec debug() -> boolean().
@@ -53,6 +60,7 @@ template_dirs() -> env(template_dirs).
 template_loaders() -> env(template_loaders).
 
 env(K) ->
+    %% Defaults should be defined for every env var.
     {ok, V} = application:get_env(dtl, K),
     V.
 

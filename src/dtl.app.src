@@ -26,6 +26,7 @@
     {registered, []},
     {applications, [kernel, stdlib]},
     {env, [{apps, []},
+           {context_processors, []},
            {debug, false},
            {template_dirs, ["priv/templates"]},
            {template_loaders, [dtl_fs_loader, dtl_apps_loader]}]}
