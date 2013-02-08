@@ -39,7 +39,7 @@
 
 %% @doc Traverses the provided template source code, generating a list
 %%      of tokens describing the basic structure.
--spec tokenize(binary()) -> token().
+-spec tokenize(binary()) -> [token()].
 tokenize(Str) ->
     Bits = re:split(Str, make_splitter()),
     tokenize_bits(Bits, [], false, false).
