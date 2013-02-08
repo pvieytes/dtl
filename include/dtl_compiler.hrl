@@ -20,29 +20,30 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Core template data type and functions. Controls high-level
-%%      template operations.
--module(dtl_template).
+%% @doc Common things needed for tokenizing and parsing Django
+%%      templates.
 
--export([new/1]).
+-define(BLOCK_TAG_START, "{%").
+-define(BLOCK_TAG_END, "%}").
+-define(VARIABLE_TAG_START, "{{").
+-define(VARIABLE_TAG_END, "}}").
+-define(COMMENT_TAG_START, "{#").
+-define(COMMENT_TAG_END, "#}").
 
--record(tpl, {nodelist}).
+-define(SINGLE_BRACE_START, "{").
+-define(SINGLE_BRACE_END, "}").
 
--type template() :: #tpl{}.
+-define(TOKEN_TEXT, text).
+-define(TOKEN_VAR, var).
+-define(TOKEN_BLOCK, block).
+-define(TOKEN_COMMENT, comment).
 
--export_type([template/0]).
+-define(FIELD_SEPARATOR, "|").
+-define(FIELD_ARGUMENT_SEPARATOR, ":").
+-define(VARIABLE_ATTRIBUTE_SEPARATOR, ".").
 
-%% @doc Compiles the provided template source, returning the compiled
-%%      representation, suitable for use with other functions in this
-%%      module.
-new(Str) ->
-    #tpl{nodelist = compile_string(Str)}.
-
-compile_string(Str) ->
-    {Lexer, Parser} = case dtl_settings:is_debug() of
-        true -> {dtl_debug_lexer, dtl_debug_parser};
-        false -> {dtl_lexer, dtl_parser}
-    end,
-    Tokens = Lexer:tokenize(Str),
-    {ok, NodeList} = Parser:parse(Tokens),
-    NodeList.
+-type token_type() :: ?TOKEN_TEXT
+                    | ?TOKEN_VAR
+                    | ?TOKEN_BLOCK
+                    | ?TOKEN_COMMENT.
+-type token() :: {token_type(), binary()}.

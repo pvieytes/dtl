@@ -20,29 +20,5 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Core template data type and functions. Controls high-level
-%%      template operations.
--module(dtl_template).
-
--export([new/1]).
-
--record(tpl, {nodelist}).
-
--type template() :: #tpl{}.
-
--export_type([template/0]).
-
-%% @doc Compiles the provided template source, returning the compiled
-%%      representation, suitable for use with other functions in this
-%%      module.
-new(Str) ->
-    #tpl{nodelist = compile_string(Str)}.
-
-compile_string(Str) ->
-    {Lexer, Parser} = case dtl_settings:is_debug() of
-        true -> {dtl_debug_lexer, dtl_debug_parser};
-        false -> {dtl_lexer, dtl_parser}
-    end,
-    Tokens = Lexer:tokenize(Str),
-    {ok, NodeList} = Parser:parse(Tokens),
-    NodeList.
+%% @doc Template parsing functions.
+-module(dtl_parser).

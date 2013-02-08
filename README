@@ -230,6 +230,7 @@ Empty.
 -----------
 * Base lexer and parser.
 * Contexts.
+* Node/NodeList rendering, API.
 * Debug lexer and parser.
 * Tag interfaces.
 * Filter interfaces.
