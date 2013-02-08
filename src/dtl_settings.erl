@@ -24,6 +24,7 @@
 -module(dtl_settings).
 
 -export([apps/0,
+         context_processors/0,
          debug/0,
          template_dirs/0,
          template_loaders/0]).
