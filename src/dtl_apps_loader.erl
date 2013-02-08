@@ -54,9 +54,11 @@ load_template_source(Name, _Dirs) ->
 load_template_source(Name, [App|Apps], Tried) ->
     case code:priv_dir(App) of
         %% Django reports this error, not sure if we should too ...
-        {error, bad_name} -> load_template_source(Name, Apps, [App|Tried]);
+        {error, bad_name} ->
+            load_template_source(Name, Apps, [App|Tried]);
         Priv ->
-            case dtl_fs_loader:load_from_directory(Priv, Name) of
+            Dir = filename:join(Priv, "templates"),
+            case dtl_fs_loader:load_from_directory(Dir, Name) of
                 T = {ok, _Contents, _Path} -> T;
                 {error, not_found} ->
                     load_template_source(Name, Apps, [App|Tried])

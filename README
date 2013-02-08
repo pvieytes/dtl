@@ -140,8 +140,10 @@ dtl_fs_loader
     contained in one of these directories will be found.
 
 dtl_app_loader
-    This loader searches in the "priv" directory of each app specified
-    with the `apps' configuration option.
+    This loader searches in "templates" in the "priv" directory of each
+    app specified with the `apps' configuration option. That is,
+    "index.html" would be searched for at foo/priv/templates/index.html
+    if `foo' were included in the `apps' configuration option.
 
 You can also implement your own loaders. Here is a loader that tries to
 copy a template from a web service (!):
