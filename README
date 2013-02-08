@@ -3,6 +3,9 @@ Django Template Language
 
 A full-featured port of the Django template engine to Erlang.
 
+NOTE: The usage described in `3. Basic Usage' is not yet implemented.
+      This, rather, is a development target.
+
 Table of Contents:
     1. Introduction
     2. Getting Started
