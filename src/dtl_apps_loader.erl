@@ -64,8 +64,8 @@ load_template_source(Name, [App|Apps], Tried) ->
                     load_template_source(Name, Apps, [App|Tried])
             end
     end;
-load_template_source(_Name, [], Tried) ->
-    {error, {not_found, Tried}}.
+load_template_source(_Name, [], _Tried) ->
+    {error, not_found}.
 
 %%
 %% Tests,

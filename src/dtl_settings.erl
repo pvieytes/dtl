@@ -28,28 +28,33 @@
          template_dirs/0,
          template_loaders/0]).
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 %% @doc Returns a list of apps that should be searched for templates at
 %%      runtime.
 -spec apps() -> [atom()].
-apps() -> env(apps, []).
+apps() -> env(apps).
 
 %% @doc Returns `true' if the application is configured in "debug" mode,
 %%      `false' otherwise.
 -spec debug() -> boolean().
-debug() -> env(debug, false).
+debug() -> env(debug).
 
 %% @doc Returns the application's configured list of template
 %%      directories.
 -spec template_dirs() -> [list()].
-template_dirs() -> env(template_dirs, []).
+template_dirs() -> env(template_dirs).
 
 %% @doc Returns the configured list of template loader modules. All
 %%      should implement the `dtl_loader' behaviour.
 -spec template_loaders() -> [atom()].
-template_loaders() -> env(template_loaders, [dtl_fs_loader, dtl_apps_loader]).
+template_loaders() -> env(template_loaders).
 
-env(K, Def) ->
-    case application:get_env(K) of
-        undefined -> Def;
-        {ok, V} -> V
-    end.
+env(K) ->
+    {ok, V} = application:get_env(dtl, K),
+    V.
+
+-ifdef(TEST).
+-endif.

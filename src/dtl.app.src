@@ -25,5 +25,8 @@
     {vsn, "1.0.0"},
     {registered, []},
     {applications, [kernel, stdlib]},
-    {env, []} 
+    {env, [{apps, []},
+           {debug, false},
+           {template_dirs, ["priv/templates"]},
+           {template_loaders, [dtl_fs_loader, dtl_apps_loader]}]}
 ]}.

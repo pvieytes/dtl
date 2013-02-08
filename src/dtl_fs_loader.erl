@@ -50,8 +50,7 @@ load_template_source(Name) ->
 %%      (rather than the application's configured directory list). If
 %%      the provided list is empty, we use the configured list of these.
 %%      
-%%      If the template is not found, this returns a list of tried
-%%      file system paths.
+%%      If the template is not found, this returns a `not_found' error.
 -spec load_template_source(list(), [list()]) ->
     {ok, binary(), list()} 
       | {error, no_template_dirs | {not_found, [list()]}}.
@@ -61,14 +60,14 @@ load_template_source(Name, Dirs) ->
     load_template_source(Name, Dirs, []).
 load_template_source(Name, [Dir|Dirs], Tried) ->
     case load_from_directory(Dir, Name) of
-        T = {ok, _Contents, _Path} -> T;
+        {ok, Contents, Path} -> {ok, Contents, Path};
         {error, not_found} ->
             load_template_source(Name, Dirs, [Dir|Tried])
     end;
 load_template_source(_Name, [], []) ->
     {error, no_template_dirs};
-load_template_source(_Name, [], Tried) ->
-    {error, {not_found, lists:reverse(Tried)}}.
+load_template_source(_Name, [], _Tried) ->
+    {error, not_found}.
 
 %% @doc Searches the provided directory for the named file, reading its
 %%      contents if found. An error of `not_found' will be returned in
@@ -80,8 +79,10 @@ load_from_directory(Dir, Name) ->
     case mochiweb_util:safe_relative_path(RelativePath) of
         undefined -> {error, not_found};
         Path -> case file:read_file(Path) of
-            {ok, Contents} -> {ok, Contents, Path};
-            {error, _Reason} -> {error, not_found}
+            {ok, Contents} ->
+                {ok, Contents, Path};
+            {error, _Reason} ->
+                {error, not_found}
         end
     end.
 
@@ -89,4 +90,8 @@ load_from_directory(Dir, Name) ->
 %% Tests,
 %%
 -ifdef(TEST).
+
+simple_load_test() ->
+    ok.
+
 -endif.
