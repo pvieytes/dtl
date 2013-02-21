@@ -29,10 +29,6 @@
          load_template_source/1,
          load_template_source/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 %% @doc Callback to test if this module is usable.
 -spec is_usable() -> true.
 is_usable() -> true.
@@ -76,7 +72,7 @@ load_template_source(_Name, [], _Tried) ->
     {ok, binary(), list()} | {error, not_found}.
 load_from_directory(Dir, Name) ->
     RelativePath = filename:join(Dir, Name),
-    case mochiweb_util:safe_relative_path(RelativePath) of
+    case dtl_file:safe_path(RelativePath, Dir) of
         undefined -> {error, not_found};
         Path -> case file:read_file(Path) of
             {ok, Contents} ->
@@ -85,13 +81,3 @@ load_from_directory(Dir, Name) ->
                 {error, not_found}
         end
     end.
-
-%%
-%% Tests,
-%%
--ifdef(TEST).
-
-simple_load_test() ->
-    ok.
-
--endif.

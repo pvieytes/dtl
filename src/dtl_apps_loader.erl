@@ -29,10 +29,6 @@
          load_template_source/1,
          load_template_source/2]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 %% @doc Callback to test if this module is usable.
 -spec is_usable() -> true.
 is_usable() -> true.
@@ -66,9 +62,3 @@ load_template_source(Name, [App|Apps], Tried) ->
     end;
 load_template_source(_Name, [], _Tried) ->
     {error, not_found}.
-
-%%
-%% Tests,
-%%
--ifdef(TEST).
--endif.

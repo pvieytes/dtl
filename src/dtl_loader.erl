@@ -34,10 +34,6 @@
          find_template/2,
          select_template/1]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 %% @doc Finds a template and compiles it, returning the compiled
 %%      representation.
 -spec get_template(list()) ->
@@ -86,9 +82,3 @@ try_loaders(Name, Dirs, [Loader|Loaders]) ->
         false -> try_loaders(Name, Dirs, Loaders)
     end;
 try_loaders(_Name, _Dirs, []) -> {error, not_found}.
-
-%%
-%% Tests,
-%%
--ifdef(TEST).
--endif.
