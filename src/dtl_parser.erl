@@ -22,3 +22,8 @@
 
 %% @doc Template parsing functions.
 -module(dtl_parser).
+
+-export([parse/1]).
+
+parse(Tokens) ->
+    {ok, []}.

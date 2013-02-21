@@ -62,4 +62,4 @@ tokenize_bits([], Tokens, _InTag, _Verbatim) ->
 
 %% Token factory function (stub).
 make_token(_Str, _InTag, _Verbatim) ->
-    ok.
+    {ok, token, _Verbatim}.

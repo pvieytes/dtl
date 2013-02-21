@@ -39,7 +39,7 @@ new(Str) ->
     #tpl{nodelist = compile_string(Str)}.
 
 compile_string(Str) ->
-    {Lexer, Parser} = case dtl_settings:is_debug() of
+    {Lexer, Parser} = case dtl_settings:debug() of
         true -> {dtl_debug_lexer, dtl_debug_parser};
         false -> {dtl_lexer, dtl_parser}
     end,
