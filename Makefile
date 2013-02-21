@@ -1,21 +1,34 @@
-REBAR   ?= rebar
-RFLAGS  ?= skip_deps=true
-CTFLAGS ?= suites=eunit verbose=1
-DEPS    = deps
+SHELL := bash
 
-dtl:
-	$(REBAR) compile $(RFLAGS)
+# Files that require compilation.
+BEAMS := ebin/dtl_loader.beam \
+	 $(shell find src -name '*.erl' \
+		| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
+# Raw distributed module list.
+MODS := $(shell find src -name '*.erl' -not -name '*.test.erl' \
+	-exec basename -s .erl {} \;)
+# Distributed module list, as an erlang term.
+MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
-ct: ct-clean dtl
-	$(REBAR) ct $(RFLAGS) $(CTFLAGS)
+dtl: ebin/dtl.app $(BEAMS)
+
+ebin/dtl.app: src/dtl.app.src
+	mkdir -p ebin
+	sed 's/{modules, \[\]}/{modules, $(MODLIST)}/' $< > $@
+
+ebin/%.beam: src/%.erl
+	erlc -Werror -o ebin -pa ebin -I include $?
 
 clean: ct-clean
-	$(REBAR) clean $(RFLAGS)
+	rm -rf ebin
 
 ct-clean:
 	rm -rf logs
 
-deps:
-	$(REBAR) get-deps
+check: ct
 
-.PHONY: dtl ct clean ct-clean deps
+ct: ct-clean dtl
+	mkdir -p logs
+	ct_run -pa ebin -I include -dir test -logdir logs -suite eunit_SUITE
+
+.PHONY: dtl clean ct-clean check ct
