@@ -31,4 +31,10 @@ ct: ct-clean dtl
 	mkdir -p logs
 	ct_run -pa ebin -I include -dir test -logdir logs -suite eunit_SUITE
 
+build-plt: dtl
+	dialyzer --build_plt --output_plt .dtl.plt --apps kernel stdlib
+
+dialyze:
+	dialyzer --src src --plt .dtl.plt --no_native
+
 .PHONY: dtl clean ct-clean check ct
