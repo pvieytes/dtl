@@ -23,4 +23,4 @@
 %% @doc Functions for working with template nodes. Nodes are the core
 %%      building block of templates, and templates are rendered by
 %%      recursively rendering nodelists, which in turn render nodes.
--module(dtl_nodelist).
+-module(dtl_node).

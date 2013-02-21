@@ -32,5 +32,8 @@ abspath_test_() ->
         ?_assertEqual("/bin", dtl_file:abspath("/bin")),
         ?_assertEqual("/", dtl_file:abspath("/usr/..")),
         ?_assertEqual(Dir, dtl_file:abspath(".")),
-        ?_assertEqual("/etc", dtl_file:abspath("/etc/nginx/sites/../.."))
+        ?_assertEqual("/etc", dtl_file:abspath("/etc/nginx/sites/../..")),
+        ?_assertEqual(undefined, dtl_file:safe_path("..", ".")),
+        ?_assertEqual("log", dtl_file:safe_path("log", ".")),
+        ?_assertEqual(Dir, dtl_file:safe_path(Dir, Dir))
     ].

@@ -38,7 +38,7 @@ is_usable() -> true.
 %%      if there was one.
 -spec load_template_source(list()) -> 
     {ok, binary(), list()}
-      | {error, no_template_dirs | {not_found, [list()]}}.
+      | {error, no_template_dirs | not_found}.
 load_template_source(Name) ->
     load_template_source(Name, dtl_settings:template_dirs()).
 
@@ -49,7 +49,7 @@ load_template_source(Name) ->
 %%      If the template is not found, this returns a `not_found' error.
 -spec load_template_source(list(), [list()]) ->
     {ok, binary(), list()} 
-      | {error, no_template_dirs | {not_found, [list()]}}.
+      | {error, no_template_dirs | not_found}.
 load_template_source(Name, []) ->
     load_template_source(Name, dtl_settings:template_dirs(), []);
 load_template_source(Name, Dirs) ->

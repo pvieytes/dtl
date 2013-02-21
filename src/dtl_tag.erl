@@ -21,8 +21,8 @@
 %% SOFTWARE.
 
 %% @doc Tags are functions that return callbacks which in turn return
-%%      nodelists (see `dtl_nodelist'). They are used to transform
-%%      templates in ways that filters cannot, as they can traverse the
-%%      document and do what they please with the following nodes by
-%%
+%%      nodelists (see `dtl_node'). They are used to transform templates
+%%      in ways that filters cannot because they can consume tokens,
+%%      whereas filters only replace the explicitly filtered content
+%%      (see `dtl_filter').
 -module(dtl_tag).
