@@ -1,15 +1,21 @@
-REBAR ?= rebar
-REBAR_FLAGS ?= skip_deps=true
+REBAR   ?= rebar
+RFLAGS  ?= skip_deps=true
+CTFLAGS ?= suites=eunit verbose=1
+DEPS    = deps
 
 dtl:
-	$(REBAR) compile $(REBAR_FLAGS)
+	$(REBAR) compile $(RFLAGS)
 
-test:
-	$(REBAR) eunit $(REBAR_FLAGS)
-eu: test
+ct: ct-clean dtl
+	$(REBAR) ct $(RFLAGS) $(CTFLAGS)
 
-clean:
-	$(REBAR) clean $(REBAR_FLAGS)
+clean: ct-clean
+	$(REBAR) clean $(RFLAGS)
 
-.PHONY: dtl test clean
+ct-clean:
+	rm -rf logs
 
+deps:
+	$(REBAR) get-deps
+
+.PHONY: dtl ct clean ct-clean deps
