@@ -50,5 +50,6 @@ setup() ->
     application:set_env(dtl, template_loaders, [?MODULE]).
 
 behaviour_test_() ->
-    {setup, fun setup/0,
-     [?_assertEqual({ok, <<"Test">>}, dtl_loader:find_template(""))]}.
+    {setup, fun setup/0, [
+        ?_assertEqual({ok, <<"Test">>}, dtl_loader:find_template(""))
+    ]}.

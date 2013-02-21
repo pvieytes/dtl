@@ -33,8 +33,8 @@ all() -> [eunit].
 eunit(Config) ->
     Data = proplists:get_value(data_dir, Config),
     Priv = proplists:get_value(priv_dir, Config),
+    TplDir = filename:join(Data, "templates"),
     ok = application:start(dtl),
-    application:set_env(dtl, test_data_dir, Data),
-    application:set_env(dtl, test_priv_dir, Priv),
+    application:set_env(dtl, template_dirs, [TplDir]),
     ok = eunit:test({application, dtl}),
     ok = application:stop(dtl).

@@ -25,11 +25,12 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-abspath_tests_() ->
+abspath_test_() ->
     {ok, Dir} = file:get_cwd(),
-    [?_assertEqual("/", dtl_file:abspath("/")),
-     ?_assertEqual("/bin", dtl_file:abspath("/bin")),
-     ?_assertEqual("/", dtl_file:abspath("/usr/..")),
-     ?_assertEqual(Dir, dtl_file:abspath(".")),
-     ?_assertEqual("/etc", dtl_file:abspath("/")),
-     ?_assertEqual("/", dtl_file:abspath("/etc/nginx/sites/../.."))].
+    [
+        ?_assertEqual("/", dtl_file:abspath("/")),
+        ?_assertEqual("/bin", dtl_file:abspath("/bin")),
+        ?_assertEqual("/", dtl_file:abspath("/usr/..")),
+        ?_assertEqual(Dir, dtl_file:abspath(".")),
+        ?_assertEqual("/etc", dtl_file:abspath("/etc/nginx/sites/../.."))
+    ].

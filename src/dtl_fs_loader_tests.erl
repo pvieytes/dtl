@@ -26,10 +26,6 @@
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
-    application:set_env(dtl, template_loaders, [dtl_fs_loader]),
-    {ok, Data} = application:get_env(dtl, test_data_dir),
-    TplDir = filename:join(Data, "templates"),
-    application:set_env(dtl, template_dirs, [TplDir]),
     application:set_env(dtl, template_loaders, [dtl_fs_loader]).
 
 file_load_test_() ->
