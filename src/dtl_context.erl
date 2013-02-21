@@ -20,31 +20,22 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Core template data type and functions. Controls high-level
-%%      template operations.
--module(dtl_template).
+%% @doc Functions for dealing with template contexts. Template contexts
+%%      are the primary way of transmitting data from application code
+%%      to templates.
+-module(dtl_context).
 
--export([new/1,
-         render/2]).
+-export([new/0,
+         new/1]).
 
 -include("dtl.hrl").
 
-%% @doc Compiles the provided template source, returning the compiled
-%%      representation, suitable for use with other functions in this
-%%      module.
-new(Str) ->
-    #tpl{nodelist = compile_string(Str)}.
+%% @doc Creates a new template context with no data.
+-spec new() -> context().
+new() ->
+    new([]).
 
-%% @doc Renders the provided template with the context (stub).
--spec render(template(), context()) -> {ok, binary()} | {error, atom()}.
-render(_Tpl, _Ctx) ->
-    {ok, <<>>}.
-
-compile_string(Str) ->
-    {Lexer, Parser} = case dtl_settings:debug() of
-        true -> {dtl_debug_lexer, dtl_debug_parser};
-        false -> {dtl_lexer, dtl_parser}
-    end,
-    Tokens = Lexer:tokenize(Str),
-    {ok, NodeList} = Parser:parse(Tokens),
-    NodeList.
+%% @doc Creates a new template context with the provided data.
+-spec new(list()) -> context().
+new(_PList) ->
+    #ctx{}.

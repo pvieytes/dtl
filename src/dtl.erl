@@ -22,3 +22,21 @@
 
 %% @doc Core API functions, some convenient shortcuts.
 -module(dtl).
+
+-export([render/1,
+         render/2]).
+
+-include("dtl.hrl").
+
+%% @doc Stub. Renders a template or returns an error.
+-spec render(template()) -> {ok, binary()} | {error, atom()}.
+render(Tpl) ->
+    render(Tpl, dtl_context:new()).
+
+%% @doc Stub. Renders a template or returns an error.
+-spec render(template(), [{term(), term()}]) -> {ok, binary()} | {error, atom()};
+            (template(), context()) -> {ok, binary()} | {error, atom()}.
+render(Tpl, PList) when is_list(PList) ->
+    render(Tpl, dtl_context:new(PList));
+render(Tpl, Ctx) ->
+    dtl_template:render(Tpl, Ctx).

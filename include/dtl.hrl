@@ -20,31 +20,10 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Core template data type and functions. Controls high-level
-%%      template operations.
--module(dtl_template).
+%% @doc Records and types needed throughout the program.
 
--export([new/1,
-         render/2]).
+-record(ctx, {stack=[]}).
+-record(tpl, {nodelist=[]}).
 
--include("dtl.hrl").
-
-%% @doc Compiles the provided template source, returning the compiled
-%%      representation, suitable for use with other functions in this
-%%      module.
-new(Str) ->
-    #tpl{nodelist = compile_string(Str)}.
-
-%% @doc Renders the provided template with the context (stub).
--spec render(template(), context()) -> {ok, binary()} | {error, atom()}.
-render(_Tpl, _Ctx) ->
-    {ok, <<>>}.
-
-compile_string(Str) ->
-    {Lexer, Parser} = case dtl_settings:debug() of
-        true -> {dtl_debug_lexer, dtl_debug_parser};
-        false -> {dtl_lexer, dtl_parser}
-    end,
-    Tokens = Lexer:tokenize(Str),
-    {ok, NodeList} = Parser:parse(Tokens),
-    NodeList.
+-type context() :: #ctx{}.
+-type template() :: #tpl{}.

@@ -43,8 +43,7 @@ CT_RUN ?= ct_run
 SHELL := bash
 
 # Files that require compilation.
-BEAMS := ebin/dtl_loader.beam \
-	 $(shell find src -name '*.erl' \
+BEAMS := ebin/dtl_loader.beam $(shell find src -name '*.erl' \
 		| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
 
 # Raw distributed module list.

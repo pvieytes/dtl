@@ -3,8 +3,8 @@ Django Template Language
 
 A full-featured port of the Django template engine to Erlang.
 
-NOTE: The usage described in `3. Basic Usage' is not yet implemented.
-      This, rather, is a development target.
+NOTE: The usage described in `3. Basic Usage' is still a work in
+      progress, and dtl:render() remains a stub.
 
 Table of Contents:
     1. Introduction
