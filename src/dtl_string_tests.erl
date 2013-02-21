@@ -22,51 +22,14 @@
 
 %% @doc String utilities for implementing the Django Template Language,
 %%      ported from Django project source code.
--module(dtl_string).
+-module(dtl_string_tests).
 
--export([escape_re/1]).
-
--ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
--endif.
-
-%% @doc Escape an input string for use within a regular expression (so
-%%      that all characters are interpreted literally). Every character
-%%      will be escaped except for alphanumeric characters and '_'.
--spec escape_re(list()) -> list().
-escape_re(Patt) ->
-    lists:flatten(escape_re(Patt, [])).
-escape_re([Ch|Patt], Escaped) ->
-    escape_re(Patt, [escape_re_char(Ch)|Escaped]);
-escape_re([], Escaped) -> lists:reverse(Escaped).
-escape_re_char(C) when C < $0;
-                       C > $9, C < $A;
-                       C > $Z, C < $a, C /= $_;
-                       C > $z  -> [$\\, C];
-escape_re_char(C) -> C.
-
-%%
-%% Tests,
-%%
--ifdef(TEST).
-
-foo_test() -> ok = ok.
-
-setup() -> ok.
-teardown(_) -> ok.
 
 escape_test_() ->
-    {setup,
-     fun setup/0,
-     fun teardown/1,
-     fun (_) ->
-         {inparallel, [
-            ?_assertEqual("a\\._\\(\\(\\?\\:foo\\)\\)",
-                          escape_re("a._((?:foo))")),
-            ?_assertEqual("", escape_re("")),
-            ?_assertEqual("123", escape_re("123")),
-            ?_assertEqual("\\.__\\.\\-\\-", escape_re(".__.--"))
-         ]}
-     end}.
-
--endif.
+    [?_assertEqual("a\\._\\(\\(\\?\\:foo\\)\\)",
+                   dtl_string:escape_re("a._((?:foo))")),
+     ?_assertEqual("", dtl_string:escape_re("")),
+     ?_assertEqual("123", dtl_string:escape_re("123")),
+     ?_assertEqual("\\.__\\.\\-\\-", dtl_string:escape_re(".__.--"))
+    ].
