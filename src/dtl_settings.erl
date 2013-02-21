@@ -29,10 +29,6 @@
          template_dirs/0,
          template_loaders/0]).
 
--ifdef(TEST).
--include_lib("eunit/include/eunit.hrl").
--endif.
-
 %% @doc Returns a list of apps that should be searched for templates at
 %%      runtime.
 -spec apps() -> [atom()].
@@ -64,6 +60,3 @@ env(K) ->
     %% Defaults should be defined for every env var.
     {ok, V} = application:get_env(dtl, K),
     V.
-
--ifdef(TEST).
--endif.
