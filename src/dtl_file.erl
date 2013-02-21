@@ -26,6 +26,11 @@
 -export([abspath/1,
          safe_path/2]).
 
+%% @doc Returns the absolute path of the provided relative path,
+%%      prepending the current working directory if the path is not
+%%      already absolute, resolving "." and ".." path components in the
+%%      process.
+-spec abspath(list()) -> list().
 abspath([$/|_] = Path) ->
     Parts = filename:split(Path),
     abspath_resolve(Parts, "");
@@ -42,8 +47,12 @@ abspath_resolve([Part|Parts], Acc) ->
 abspath_resolve([], Acc) ->
     filename:join(lists:reverse(Acc)).
 
+%% @doc Returns the first path if the second (root) path is its ancestor.
+%%      Returns `undefined' if the second path is not an ancestor of the
+%%      first.
+-spec safe_path(list(), list()) -> list() | undefined.
 safe_path(Path, Root) ->
-    case string:str(Path, Root) of
+    case string:str(abspath(Path), abspath(Root)) of
         0 -> undefined;
         _ -> Path
     end.
