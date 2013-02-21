@@ -5,7 +5,7 @@ BEAMS := ebin/dtl_loader.beam \
 	 $(shell find src -name '*.erl' \
 		| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
 # Raw distributed module list.
-MODS := $(shell find src -name '*.erl' -not -name '*.test.erl' \
+MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
 	-exec basename -s .erl {} \;)
 # Distributed module list, as an erlang term.
 MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
