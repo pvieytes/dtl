@@ -25,5 +25,5 @@
 
 -export([parse/1]).
 
-parse(Tokens) ->
+parse(_Tokens) ->
     {ok, []}.
