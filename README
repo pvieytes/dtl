@@ -124,10 +124,34 @@ any observable differences.
 
 5. Context
 ----------
-Empty.
+Contexts are the primary means of transmitting data from application
+code to Django templates. Any value that is accessible on a context
+will be accessible in any template into which the context is loaded:
+
+    Ctx = dtl_context:new([
+        {foo, "Foo"},
+        {bar, "Bar"}
+    ]),
+    {ok, Bin} = dtl:render(Tpl, Ctx).
+
 
 5a. Context Processors
-Empty.
+
+A user may specify a list of {Mod, Fun} tuples which will be called, in
+order, when initializing a new context. Each function should return a
+property list. Here is an example context processor:
+
+    process_time() ->
+        Time = calendar:local_time(),
+        [{Year, Month, Day}, {Hours, Minutes, Seconds}] = Time,
+        [{time, io_lib:format("~p-~p-~p", [Year, Month, Day])},
+         {date, io_lib:format("~p:~p:~p", [Hours, Minutes, Seconds])}].
+
+Context processors are specified in application config.
+
+    application:set_env(dtl, context_processors, [{my_app, process_time}]).
+
+Now, a template could access `time' and `date' variables.
 
 
 6. Loader Modules
