@@ -20,12 +20,12 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Libraries are containers of template tags and filters. Custom
-%%      DTL tags and filters must be implemented in a module that
-%%      implements the `dtl_library' behaviour.
--module(dtl_library).
+%% @doc Default tags and templates.
+-module(dtl_default_library).
+-behaviour(dtl_library).
 
--callback registered_tags() ->
-    [atom() | {atom(), [{term(), term()}]}].
--callback registered_filters() ->
-    [atom() | {atom(), [{term(), term()}]}].
+-export([registered_tags/0,
+         registered_filters/0]).
+
+registered_tags() -> [].
+registered_filters() -> [].

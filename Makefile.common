@@ -65,8 +65,9 @@ MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
 # could contain spaces (this is never the case for Erlang modules).
 MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
-program:
-	@$(MAKE) ebin/$(PROGRAM).app $(PREREQ_BEAMS)
+# These are separate because eventually we want to use the -j flag (job
+# count limit) in the main BEAMS compilation.
+program: ebin/$(PROGRAM).app $(PREREQ_BEAMS)
 	@$(MAKE) $(BEAMS)
 
 ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
