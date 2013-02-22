@@ -37,7 +37,8 @@
          push/1,
          render_fetch/2,
          render_fetch/3,
-         set/3]).
+         set/3,
+         update/2]).
 
 -include("dtl.hrl").
 

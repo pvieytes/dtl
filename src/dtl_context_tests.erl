@@ -31,18 +31,18 @@ example_processor() -> [{b, 7}, {z, 8}].
 
 base_context_test_() ->
     application:set_env(dtl, context_processors, []),
-    Ctx = dtl_context:new([
-        {a, 1},
-        {b, 2}
-    ]),
+    Ctx = dtl_context:new([{a, 1}, {b, 2}]),
     Ctx2 = dtl_context:pop(Ctx),
     Ctx3 = dtl_context:set(dtl_context:push(Ctx), a, 4),
+    Ctx4 = dtl_context:update(Ctx, [{a, 5}]),
     [?_assertEqual(1, dtl_context:fetch(Ctx, a)),
      ?_assertEqual(2, dtl_context:fetch(Ctx, b)),
      ?_assertEqual(undefined, dtl_context:fetch(Ctx, c)),
      ?_assertEqual(3, dtl_context:fetch(Ctx, c, 3)),
      ?_assertEqual(undefined, dtl_context:fetch(Ctx2, a)),
-     ?_assertEqual(4, dtl_context:fetch(Ctx3, a, 3))].
+     ?_assertEqual(4, dtl_context:fetch(Ctx3, a, 3)),
+     ?_assertEqual(5, dtl_context:fetch(Ctx4, a)),
+     ?_assertEqual(2, dtl_context:fetch(Ctx4, b))].
 
 context_processor_test_() ->
     application:set_env(dtl, context_processors,
