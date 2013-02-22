@@ -1,3 +1,48 @@
+# Copyright (c) 2013- Thomas Allen <thomas@oinksoft.com>
+#
+# Permission is hereby granted, free of charge, to any person obtaining
+# a copy of this software and associated documentation files (the
+# "Software"), to deal in the Software without restriction, including
+# without limitation the rights to use, copy, modify, merge, publish,
+# distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to
+# the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+# IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+# CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+# TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+# SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# Common Erlang `make` targets.
+#
+# Targets:
+# 	  program: Compile the erlang source code.
+# 	  check (ct): Run common test.
+# 	  plt: Build Dialyzer PLT file.
+# 	  dialyzer: Run Dialyzer.
+#
+# Hook targets:
+# 	  clean-pre: Run just before `clean'.
+# 	  ct-pre: Run just before `ct' (Common Test).
+#
+# Flag macros:
+# 	  PROGRAM: Required. The program name, used to infer .app.src path
+# 	      and for reporting.
+# 	  PREREQ_BEAMS: BEAM files which should be compiled before all
+# 	      others. Use with behaviours and such.
+# 	  ERLC: Erlang compiler executable.
+# 	  EFLAGS: Erlang compiler flags.
+# 	  DIALYZER: Dialyzer executable.
+# 	  CT_RUN: Common Test executable.
+# 	  CT_FLAGS: Extra command-line flags for Common Test.
+# 	  CT_SUITES: A list of test suites that Common Test should run.
+
 # Options
 ERLC ?= erlc
 EFLAGS ?=
@@ -22,7 +67,6 @@ MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
 program: ebin/$(PROGRAM).app $(BEAMS)
 
-
 ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
 	mkdir -p ebin
 	sed 's/{modules, \[\]}/{modules, $(MODLIST)}/' $< > $@
@@ -35,8 +79,6 @@ ebin/%.beam: src/%.erl
 clean: ct-clean clean-pre
 	rm -rf ebin
 
-clean-pre:
-
 ct-clean:
 	rm -rf logs
 
@@ -47,13 +89,15 @@ ct: ct-clean program ct-pre
 	$(CT_RUN) $(EFLAGS) $(CT_FLAGS) -pa ebin \
 		-I include -dir test -logdir logs -suite $(CT_SUITES)
 
-ct-pre:
-
 plt:
 	$(DIALYZER) --build_plt --output_plt .$(PROGRAM).plt \
 		--apps kernel stdlib
 
 dialyze:
 	$(DIALYZER) --src src --plt .$(PROGRAM).plt --no_native
+
+# Hook stubs.
+clean-pre:
+ct-pre:
 
 .PHONY: clean clean-pre ct-clean check ct ct-pre
