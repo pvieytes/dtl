@@ -23,11 +23,13 @@
 %% @doc Tests for the filesystem loader.
 -module(dtl_context_tests).
 
--export([example_processor/0]).
+-export([example_processor/0,
+         example_processor2/0]).
 
 -include_lib("eunit/include/eunit.hrl").
 
-example_processor() -> [{b, 7}, {z, 8}].
+example_processor() -> [{b, 7}, {z, 8}, {x, 20}].
+example_processor2() -> [{b, 8}].
 
 base_context_test_() ->
     application:set_env(dtl, context_processors, []),
@@ -46,8 +48,10 @@ base_context_test_() ->
 
 context_processor_test_() ->
     application:set_env(dtl, context_processors,
-                        [{dtl_context_tests, example_processor}]),
+                        [{dtl_context_tests, example_processor},
+                         {dtl_context_tests, example_processor2}]),
     Ctx = dtl_context:new([{z, 9}]),
-    [?_assertEqual(9, dtl_context:fetch(Ctx, z)),
-     ?_assertEqual(7, dtl_context:fetch(Ctx, b)),
+    [?_assertEqual(20, dtl_context:fetch(Ctx, x)),
+     ?_assertEqual(8, dtl_context:fetch(Ctx, b)),
+     ?_assertEqual(20, dtl_context:fetch(Ctx, x)),
      ?_assertEqual(undefined, dtl_context:fetch(Ctx, y))].
