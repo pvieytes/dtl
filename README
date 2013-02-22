@@ -55,12 +55,14 @@ documentation if this is unclear:
 The following are the configuration keys for the `dtl' app, their
 expected types, and any default values:
 
-    Key               Type       Default
-    ----------------  ---------  -------------------------------
-    apps              [atom()]   []
-    debug             boolean()  false
-    template_dirs     [list()]   []
-    template_loaders  [atom()]   [dtl_fs_loader, dtl_app_loader]
+    Key                 Type                Default
+    ----------------    ---------           ---------------------------
+    apps                [atom()]            []
+    debug               boolean()           false
+    context_processors  [{atom(), atom()}]  []
+    template_dirs       [list()]            []
+    template_loaders    [atom()]            [dtl_fs_loader,
+                                             dtl_app_loader]
 
 apps
     A list of apps that the dtl_app_loader should use.
