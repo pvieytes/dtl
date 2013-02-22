@@ -35,6 +35,8 @@
          new/1,
          pop/1,
          push/1,
+         render_fetch/2,
+         render_fetch/3,
          set/3]).
 
 -include("dtl.hrl").
@@ -46,14 +48,18 @@ new() -> new([]).
 %% @doc Creates a new template context with the provided data.
 -spec new(list()) -> dtl_context().
 new(PList) ->
-    Ctx = new_base(PList),
-    Ctx#dtl_ctx{render_context = new_base()}.
+    Ctx = new_base(),
+    Ctx2 = Ctx#dtl_ctx{render_context = new_base()},
+    update(process_all(Ctx2), PList).
 
-new_base() -> new_base([]).
-new_base(PList) ->
-    lists:foldl(fun ({K, V}, Ctx) ->
-        set(Ctx, K, V)
-    end, push(#dtl_ctx{}), PList).
+new_base() -> #dtl_ctx{}.
+
+%% TODO: Support some initial state (Django provides an HTTP request
+%%       object to each processor).
+process_all(BaseCtx) ->
+    lists:foldl(fun ({M, F}, Ctx) ->
+        update(Ctx, M:F())
+    end, BaseCtx, dtl_settings:context_processors()).
 
 %% @doc Pushes a new dict on the stack.
 -spec push(dtl_context()) -> dtl_context().
@@ -74,6 +80,14 @@ set(Ctx = #dtl_ctx{stack = [Head|Stack]}, K, V) ->
     Ctx#dtl_ctx{stack = [dict:store(K, V, Head)|Stack]};
 set(Ctx = #dtl_ctx{stack = []}, K, V) ->
     set(push(Ctx), K, V).
+
+%% @doc Set many values on a context at once.
+-spec update(dtl_context(), [{term(), term()}]) -> dtl_context().
+update(Ctx, PList) ->
+    Ctx2 = push(Ctx),
+    lists:foldl(fun ({K, V}, Ctx3) ->
+        set(Ctx3, K, V)
+    end, Ctx2, PList).
 
 %% @doc Looks up a value on all stacks, in top-to-bottom order.
 -spec fetch(dtl_context(), term()) -> {ok, term()} | undefined.
@@ -97,10 +111,14 @@ fetch(Ctx, K, Def) ->
         V -> V
     end.
 
-%% Render contexts have different scope rules: Only look at the head of
-%% the stack.
+%% @doc Render contexts have different scope rules: Only look at the
+%%      head of the stack. End users shouldn't have much reason to use
+%%      this function.
+-spec render_fetch(dtl_context(), term()) -> term() | undefined.
 render_fetch(#dtl_ctx{stack = [Head|_Stack]}, K) ->
     fetch([Head], K).
+
+-spec render_fetch(dtl_context(), term(), term()) -> term().
 render_fetch(Ctx, K, Def) ->
     case render_fetch(Ctx, K) of
         undefined -> Def;
