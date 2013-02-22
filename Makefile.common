@@ -34,6 +34,7 @@
 # Flag macros:
 # 	  PROGRAM: Required. The program name, used to infer .app.src path
 # 	      and for reporting.
+# 	  JOBS: The maximum allowed concurrent `make` jobs.
 # 	  PREREQ_BEAMS: BEAM files which should be compiled before all
 # 	      others. Use with behaviours and such.
 # 	  ERLC: Erlang compiler executable.
@@ -48,12 +49,13 @@ ERLC ?= erlc
 EFLAGS ?=
 DIALYZER ?= dialyzer
 CT_RUN ?= ct_run
+JOBS ?= 4
 
 SHELL := bash
 
 # Files that require compilation.
-BEAMS := $(PREREQ_BEAMS) $(shell find src -name '*.erl' \
-		| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
+BEAMS = $(shell find src -name '*.erl' \
+	| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
 
 # Raw distributed module list.
 MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
@@ -65,7 +67,9 @@ MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
 # could contain spaces (this is never the case for Erlang modules).
 MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
-program: ebin/$(PROGRAM).app $(BEAMS)
+program:
+	@$(MAKE) ebin/$(PROGRAM).app $(PREREQ_BEAMS)
+	@$(MAKE) -j$(JOBS) $(BEAMS)
 
 ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
 	mkdir -p ebin
