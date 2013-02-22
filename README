@@ -144,8 +144,8 @@ property list. Here is an example context processor:
     process_time() ->
         Time = calendar:local_time(),
         [{Year, Month, Day}, {Hours, Minutes, Seconds}] = Time,
-        [{time, io_lib:format("~p-~p-~p", [Year, Month, Day])},
-         {date, io_lib:format("~p:~p:~p", [Hours, Minutes, Seconds])}].
+        [{date, io_lib:format("~p-~p-~p", [Year, Month, Day])},
+         {time, io_lib:format("~p:~p:~p", [Hours, Minutes, Seconds])}].
 
 Context processors are specified in application config.
 
