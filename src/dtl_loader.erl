@@ -21,6 +21,33 @@
 %% SOFTWARE.
 
 %% @doc Template loader interface.
+%%
+%%      Template loaders should implement the `dtl_loader' behaviour'
+%%      and its interface:
+%%
+%%      is_usable() -> boolean().
+%%          
+%%          Return `true' if the loader can or should be used in the
+%%          current environment, and `false' otherwise. You may want to
+%%          cache this value if it is expensive to compute. DTL does
+%%          not cache this result, under the assumption that a usable
+%%          loader may become unusable if runtime conditions change.
+%%
+%%      load_template_source(list()) ->
+%%          {ok, binary()} | {error,atom()}.
+%%      load_template_source(list(), [list()]) ->
+%%          {ok, binary()} | {error,atom()}.
+%%
+%%          The `load_template_source' callbacks are used to locate
+%%          templates. The first argument to this function is the name
+%%          of the requested template. The second argument can in most
+%%          cases be ignored, it is the list of configured template
+%%          directories, used by `dtl_fs_loader'.
+%%
+%%      This module's functions all operate, in order, on the list of
+%%      template loaders configured in this application's environment
+%%      variable, `template_loaders'. Functions will try each loader
+%%      until one returns a template successfully.
 -module(dtl_loader).
 
 -callback is_usable() -> boolean().

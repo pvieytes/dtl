@@ -20,18 +20,10 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tests for the filesystem loader.
--module(dtl_file_tests).
+%% @doc System tests of high-level DTL functions.
+-module(dtl_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 
-abspath_test_() ->
-    {ok, Dir} = file:get_cwd(),
-    [?_assertEqual("/", dtl_file:abspath("/")),
-     ?_assertEqual("/bin", dtl_file:abspath("/bin")),
-     ?_assertEqual("/", dtl_file:abspath("/usr/..")),
-     ?_assertEqual(Dir, dtl_file:abspath(".")),
-     ?_assertEqual("/etc", dtl_file:abspath("/etc/nginx/sites/../..")),
-     ?_assertEqual(undefined, dtl_file:safe_path("..", ".")),
-     ?_assertEqual("log", dtl_file:safe_path("log", ".")),
-     ?_assertEqual(Dir, dtl_file:safe_path(Dir, Dir))].
+render_test_() ->
+    [?_assertEqual({ok, <<>>}, dtl:render("test.html"))].

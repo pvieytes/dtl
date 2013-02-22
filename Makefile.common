@@ -34,7 +34,6 @@
 # Flag macros:
 # 	  PROGRAM: Required. The program name, used to infer .app.src path
 # 	      and for reporting.
-# 	  JOBS: The maximum allowed concurrent `make` jobs.
 # 	  PREREQ_BEAMS: BEAM files which should be compiled before all
 # 	      others. Use with behaviours and such.
 # 	  ERLC: Erlang compiler executable.
@@ -49,7 +48,6 @@ ERLC ?= erlc
 EFLAGS ?=
 DIALYZER ?= dialyzer
 CT_RUN ?= ct_run
-JOBS ?= 4
 
 SHELL := bash
 
@@ -69,7 +67,7 @@ MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
 program:
 	@$(MAKE) ebin/$(PROGRAM).app $(PREREQ_BEAMS)
-	@$(MAKE) -j$(JOBS) $(BEAMS)
+	@$(MAKE) $(BEAMS)
 
 ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
 	mkdir -p ebin
@@ -78,7 +76,7 @@ ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
 # TODO: Make beam files depend on .hrl files.
 
 ebin/%.beam: src/%.erl
-	$(ERLC) $(EFLAGS) -Werror -o ebin -pa ebin -I include $?
+	$(ERLC) $(EFLAGS) -o ebin -pa ebin -I include $?
 
 clean: ct-clean clean-pre
 	rm -rf ebin

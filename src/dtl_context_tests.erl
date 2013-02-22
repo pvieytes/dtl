@@ -21,17 +21,20 @@
 %% SOFTWARE.
 
 %% @doc Tests for the filesystem loader.
--module(dtl_file_tests).
+-module(dtl_context_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 
-abspath_test_() ->
-    {ok, Dir} = file:get_cwd(),
-    [?_assertEqual("/", dtl_file:abspath("/")),
-     ?_assertEqual("/bin", dtl_file:abspath("/bin")),
-     ?_assertEqual("/", dtl_file:abspath("/usr/..")),
-     ?_assertEqual(Dir, dtl_file:abspath(".")),
-     ?_assertEqual("/etc", dtl_file:abspath("/etc/nginx/sites/../..")),
-     ?_assertEqual(undefined, dtl_file:safe_path("..", ".")),
-     ?_assertEqual("log", dtl_file:safe_path("log", ".")),
-     ?_assertEqual(Dir, dtl_file:safe_path(Dir, Dir))].
+base_context_test_() ->
+    Ctx = dtl_context:new([
+        {a, 1},
+        {b, 2}
+    ]),
+    Ctx2 = dtl_context:pop(Ctx),
+    Ctx3 = dtl_context:set(dtl_context:push(Ctx), a, 4),
+    [?_assertEqual(1, dtl_context:fetch(Ctx, a)),
+     ?_assertEqual(2, dtl_context:fetch(Ctx, b)),
+     ?_assertEqual(undefined, dtl_context:fetch(Ctx, c)),
+     ?_assertEqual(3, dtl_context:fetch(Ctx, c, 3)),
+     ?_assertEqual(undefined, dtl_context:fetch(Ctx2, a)),
+     ?_assertEqual(4, dtl_context:fetch(Ctx3, a, 3))].

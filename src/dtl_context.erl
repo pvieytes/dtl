@@ -23,19 +23,86 @@
 %% @doc Functions for dealing with template contexts. Template contexts
 %%      are the primary way of transmitting data from application code
 %%      to templates.
+%%
+%%      TODO: Support operations via dicts? This would allow for direct
+%%            updates rather than repeated set() calls when a user is
+%%            setting several values at once.
 -module(dtl_context).
 
--export([new/0,
-         new/1]).
+-export([fetch/2,
+         fetch/3,
+         new/0,
+         new/1,
+         pop/1,
+         push/1,
+         set/3]).
 
 -include("dtl.hrl").
 
 %% @doc Creates a new template context with no data.
--spec new() -> context().
-new() ->
-    new([]).
+-spec new_base() -> dtl_context().
+new() -> new([]).
 
 %% @doc Creates a new template context with the provided data.
--spec new(list()) -> context().
-new(_PList) ->
-    #ctx{}.
+-spec new(list()) -> dtl_context().
+new(PList) ->
+    Ctx = new_base(PList),
+    Ctx#dtl_ctx{render_context = new_base()}.
+
+new_base() -> new_base([]).
+new_base(PList) ->
+    lists:foldl(fun ({K, V}, Ctx) ->
+        set(Ctx, K, V)
+    end, push(#dtl_ctx{}), PList).
+
+%% @doc Pushes a new dict on the stack.
+-spec push(dtl_context()) -> dtl_context().
+push(Ctx = #dtl_ctx{stack = Stack}) ->
+    Ctx#dtl_ctx{stack = [dict:new()|Stack]}.
+
+%% @doc Pops a dict off of the stack.
+-spec pop(dtl_context()) -> dtl_context().
+pop(Ctx = #dtl_ctx{stack = [_|Stack]}) ->
+    Ctx#dtl_ctx{stack = Stack};
+%% Django raises an exception when popping an empty stack. Not sure if
+%% it matters.
+pop(Ctx = #dtl_ctx{stack = []}) -> Ctx.
+
+%% @doc Sets a value on the stack.
+-spec set(dtl_context(), term(), term()) -> dtl_context().
+set(Ctx = #dtl_ctx{stack = [Head|Stack]}, K, V) ->
+    Ctx#dtl_ctx{stack = [dict:store(K, V, Head)|Stack]};
+set(Ctx = #dtl_ctx{stack = []}, K, V) ->
+    set(push(Ctx), K, V).
+
+%% @doc Looks up a value on all stacks, in top-to-bottom order.
+-spec fetch(dtl_context(), term()) -> {ok, term()} | undefined.
+fetch(#dtl_ctx{stack = []}, _K) ->
+    undefined;
+fetch(#dtl_ctx{stack = Stack}, K) ->
+    fetch(Stack, K);
+fetch([Head|Stack], K) ->
+    case dict:find(K, Head) of
+        error -> fetch(Stack, K);
+        {ok, V} -> V
+    end;
+fetch([], _K) -> undefined.
+
+%% @doc Looks up a value on all stacks, in top-to-bottom order,
+%%      returning the default value if none is found.
+-spec fetch(dtl_context(), term(), term()) -> term().
+fetch(Ctx, K, Def) ->
+    case fetch(Ctx, K) of
+        undefined -> Def;
+        V -> V
+    end.
+
+%% Render contexts have different scope rules: Only look at the head of
+%% the stack.
+render_fetch(#dtl_ctx{stack = [Head|_Stack]}, K) ->
+    fetch([Head], K).
+render_fetch(Ctx, K, Def) ->
+    case render_fetch(Ctx, K) of
+        undefined -> Def;
+        {ok, V} -> V
+    end.

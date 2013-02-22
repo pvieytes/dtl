@@ -32,14 +32,17 @@
 %% @doc Compiles the provided template source, returning the compiled
 %%      representation, suitable for use with other functions in this
 %%      module.
+-spec new(list() | binary()) -> dtl_template().
 new(Str) ->
-    #tpl{nodelist = compile_string(Str)}.
+    #dtl_tpl{nodelist = compile_string(Str)}.
 
 %% @doc Renders the provided template with the context (stub).
--spec render(template(), context()) -> {ok, binary()} | {error, atom()}.
+-spec render(dtl_template(), dtl_context()) ->
+    {ok, binary()} | {error, atom()}.
 render(_Tpl, _Ctx) ->
     {ok, <<>>}.
 
+-spec compile_string(list() | binary()) -> dtl_nodelist().
 compile_string(Str) ->
     {Lexer, Parser} = case dtl_settings:debug() of
         true -> {dtl_debug_lexer, dtl_debug_parser};

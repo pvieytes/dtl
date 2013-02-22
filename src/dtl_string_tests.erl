@@ -27,9 +27,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 escape_test_() ->
-    [
-        ?_assertEqual("a\\._\\(\\(\\?\\:foo\\)\\)", dtl_string:escape_re("a._((?:foo))")),
-        ?_assertEqual("", dtl_string:escape_re("")),
-        ?_assertEqual("123", dtl_string:escape_re("123")),
-        ?_assertEqual("\\.__\\.\\-\\-", dtl_string:escape_re(".__.--"))
-    ].
+    [?_assertEqual("a\\._\\(\\(\\?\\:foo\\)\\)", dtl_string:escape_re("a._((?:foo))")),
+     ?_assertEqual("", dtl_string:escape_re("")),
+     ?_assertEqual("123", dtl_string:escape_re("123")),
+     ?_assertEqual("\\.__\\.\\-\\-", dtl_string:escape_re(".__.--"))].

@@ -22,8 +22,31 @@
 
 %% @doc Records and types needed throughout the program.
 
--record(ctx, {stack=[]}).
--record(tpl, {nodelist=[]}).
+%% @doc Contexts. These maintain a stack of states pushed by different
+%%      parts of the program, so that updates to the context data
+%%      consist of pushing to the stack rather than destroying existing
+%%      data.
+-record(dtl_ctx, {
+    stack = [] :: [dict()],
+    autoescape = true :: boolean(),
+    render_context :: dtl_context()
+}).
 
--type context() :: #ctx{}.
--type template() :: #tpl{}.
+%% @doc Templates, this program's core data type. These are the compiled
+%%      representation of string templates and all template rendering
+%%      occurs via an internal node list.
+-record(dtl_tpl, {
+    nodelist = [] :: dtl_nodelist()
+}).
+
+%% @doc Nodes, the building blocks of templates. Nodes themselves may
+%%      contain lists of other nodes, so template rendering is
+%%      recursive.
+-record(dtl_node, {
+    nodelists = [] :: [dtl_nodelist()]
+}).
+
+-type dtl_context() :: #dtl_ctx{}.
+-type dtl_template() :: #dtl_tpl{}.
+-type dtl_node() :: #dtl_node{}.
+-type dtl_nodelist() :: [#dtl_node{}].

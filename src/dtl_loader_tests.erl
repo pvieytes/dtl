@@ -20,7 +20,8 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tests for the basic mechanics of the dtl_loader module.
+%% @doc Tests of basic `dtl_loader' mechanics by creating a dummy
+%%      template loader.
 -module(dtl_loader_tests).
 -behaviour(dtl_loader).
 
@@ -50,6 +51,5 @@ setup() ->
     application:set_env(dtl, template_loaders, [?MODULE]).
 
 behaviour_test_() ->
-    {setup, fun setup/0, [
-        ?_assertEqual({ok, <<"Test">>}, dtl_loader:find_template(""))
-    ]}.
+    {setup, fun setup/0,
+     [?_assertEqual({ok, <<"Test">>}, dtl_loader:find_template(""))]}.

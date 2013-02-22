@@ -36,10 +36,8 @@ settings_test_() ->
     application:set_env(dtl, debug, Debug),
     application:set_env(dtl, template_dirs, TemplateDirs),
     application:set_env(dtl, template_loaders, Loaders),
-    [
-        ?_assertEqual(dtl_settings:apps(), Apps),
-        ?_assertEqual(dtl_settings:context_processors(), Processors),
-        ?_assertEqual(dtl_settings:debug(), Debug),
-        ?_assertEqual(dtl_settings:template_dirs(), TemplateDirs),
-        ?_assertEqual(dtl_settings:template_loaders(), Loaders)
-    ].
+    [?_assertEqual(dtl_settings:apps(), Apps),
+     ?_assertEqual(dtl_settings:context_processors(), Processors),
+     ?_assertEqual(dtl_settings:debug(), Debug),
+     ?_assertEqual(dtl_settings:template_dirs(), TemplateDirs),
+     ?_assertEqual(dtl_settings:template_loaders(), Loaders)].

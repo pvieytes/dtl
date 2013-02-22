@@ -29,9 +29,8 @@ setup() ->
     application:set_env(dtl, template_loaders, [dtl_fs_loader]).
 
 file_load_test_() ->
-    {setup, fun setup/0, [
-        ?_assertEqual({error, not_found}, dtl_loader:find_template("../missing.html")),
-        ?_assertEqual({error, not_found}, dtl_loader:find_template("missing.html")),
-        ?_assertEqual({ok, <<>>}, dtl_loader:find_template("empty.html")),
-        ?_assertEqual({ok, <<"<html>\n</html>\n">>}, dtl_loader:find_template("index.html"))
-     ]}.
+    {setup, fun setup/0,
+     [?_assertEqual({error, not_found}, dtl_loader:find_template("../missing.html")),
+      ?_assertEqual({error, not_found}, dtl_loader:find_template("missing.html")),
+      ?_assertEqual({ok, <<>>}, dtl_loader:find_template("empty.html")),
+      ?_assertEqual({ok, <<"<html>\n</html>\n">>}, dtl_loader:find_template("index.html"))]}.

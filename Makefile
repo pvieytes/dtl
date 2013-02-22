@@ -48,7 +48,9 @@ clean-pre:
 CT_FLAGS = -pa $(TEST_APP)/ebin 
 CT_SUITES = eunit_SUITE
 
-ct-pre:
-	$(MAKE) -C $(TEST_APP)
+# This was causing issues on Macs ... it has to be run manually on Macs.
+#
+# ct-pre:
+# 	$(MAKE) -C $(TEST_APP)
 
 .PHONY: clean-pre ct-pre
