@@ -33,55 +33,22 @@
 #     EFLAGS: Options for the Erlang compiler.
 #     DIALYZER: The path to the Dialyzer executable.
 #     CT_RUN: The path to the Common Test executable.
+#     CT_FLAGS: Extra options for Common Test.
 
-# Options
-ERLC ?= erlc
-EFLAGS ?=
-DIALYZER ?= dialyzer
-CT_RUN ?= ct_run
+PROGRAM = dtl
+PREREQ_BEAMS = ebin/dtl_loader.beam
 
-SHELL := bash
+include Makefile.common
 
-# Files that require compilation.
-BEAMS := ebin/dtl_loader.beam $(shell find src -name '*.erl' \
-		| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
+TEST_APP = test/eunit_SUITE_data/test_app
 
-# Raw distributed module list.
-MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
-	-exec basename -s .erl {} \;)
+clean-pre:
+	$(MAKE) -C $(TEST_APP) clean
 
-# Distributed module list, as an erlang term.
-#
-# Note that this uses an unsafe array expansion. Don't use it files
-# could contain spaces (this is never the case for Erlang modules).
-MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
+CT_FLAGS = -pa $(TEST_APP)/ebin 
+CT_SUITES = eunit_SUITE
 
-dtl: ebin/dtl.app $(BEAMS)
+ct-pre:
+	$(MAKE) -C $(TEST_APP)
 
-ebin/dtl.app: src/dtl.app.src
-	mkdir -p ebin
-	sed 's/{modules, \[\]}/{modules, $(MODLIST)}/' $< > $@
-
-ebin/%.beam: src/%.erl
-	$(ERLC) $(EFLAGS) -Werror -o ebin -pa ebin -I include $?
-
-clean: ct-clean
-	rm -rf ebin
-
-ct-clean:
-	rm -rf logs
-
-check: ct
-
-ct: ct-clean dtl
-	mkdir -p logs
-	$(CT_RUN) $(EFLAGS) -pa ebin -I include -dir test -logdir logs \
-		-suite eunit_SUITE
-
-plt:
-	$(DIALYZER) --build_plt --output_plt .dtl.plt --apps kernel stdlib
-
-dialyze:
-	$(DIALYZER) --src src --plt .dtl.plt --no_native
-
-.PHONY: dtl clean ct-clean check ct
+.PHONY: clean-pre ct-pre

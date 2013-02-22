@@ -1,0 +1,59 @@
+# Options
+ERLC ?= erlc
+EFLAGS ?=
+DIALYZER ?= dialyzer
+CT_RUN ?= ct_run
+
+SHELL := bash
+
+# Files that require compilation.
+BEAMS := $(PREREQ_BEAMS) $(shell find src -name '*.erl' \
+		| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
+
+# Raw distributed module list.
+MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
+	-exec basename -s .erl {} \;)
+
+# Distributed module list, as an erlang term.
+#
+# Note that this uses an unsafe array expansion. Don't use it files
+# could contain spaces (this is never the case for Erlang modules).
+MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
+
+program: ebin/$(PROGRAM).app $(BEAMS)
+
+
+ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
+	mkdir -p ebin
+	sed 's/{modules, \[\]}/{modules, $(MODLIST)}/' $< > $@
+
+# TODO: Make beam files depend on .hrl files.
+
+ebin/%.beam: src/%.erl
+	$(ERLC) $(EFLAGS) -Werror -o ebin -pa ebin -I include $?
+
+clean: ct-clean clean-pre
+	rm -rf ebin
+
+clean-pre:
+
+ct-clean:
+	rm -rf logs
+
+check: ct
+
+ct: ct-clean program ct-pre
+	mkdir -p logs
+	$(CT_RUN) $(EFLAGS) $(CT_FLAGS) -pa ebin \
+		-I include -dir test -logdir logs -suite $(CT_SUITES)
+
+ct-pre:
+
+plt:
+	$(DIALYZER) --build_plt --output_plt .$(PROGRAM).plt \
+		--apps kernel stdlib
+
+dialyze:
+	$(DIALYZER) --src src --plt .$(PROGRAM).plt --no_native
+
+.PHONY: clean clean-pre ct-clean check ct ct-pre

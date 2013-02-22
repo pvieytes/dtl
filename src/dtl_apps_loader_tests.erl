@@ -26,8 +26,13 @@
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
+    application:set_env(dtl, apps, [test_app]),
     application:set_env(dtl, template_loaders, [dtl_apps_loader]).
 
 app_file_load_test_() ->
     {setup, fun setup/0, [
+        ?_assertEqual({ok, <<>>}, dtl_loader:find_template("blank.html")),
+        ?_assertEqual({ok, <<"Test\n">>}, dtl_loader:find_template("test.html")),
+        ?_assertEqual({error, not_found}, dtl_loader:find_template("none.html")),
+        ?_assertEqual({error, not_found}, dtl_loader:find_template("../a.html"))
      ]}.

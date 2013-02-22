@@ -37,14 +37,14 @@ is_usable() -> true.
 %%      named template. Returns the files contents if found, or a
 %%      not_found error otherwise.
 -spec load_template_source(list()) -> 
-    {ok, binary(), list()} | {error, {not_found, [list()]}}.
+    {ok, binary(), list()} | {error, not_found}.
 load_template_source(Name) -> load_template_source(Name, []).
 
 %% @doc Searches configured applications' "priv" directories for the
 %%      named template. Returns the files contents if found, or a
 %%      not_found error otherwise.
 -spec load_template_source(list(), [list()]) ->
-    {ok, binary(), list()} | {error, {not_found, [list()]}}.
+    {ok, binary(), list()} | {error, not_found}.
 load_template_source(Name, _Dirs) ->
     load_template_source(Name, dtl_settings:apps(), []).
 load_template_source(Name, [App|Apps], Tried) ->
@@ -55,7 +55,7 @@ load_template_source(Name, [App|Apps], Tried) ->
         Priv ->
             Dir = filename:join(Priv, "templates"),
             case dtl_fs_loader:load_from_directory(Dir, Name) of
-                T = {ok, _Contents, _Path} -> T;
+                {ok, Contents, Path} -> {ok, Contents, Path};
                 {error, not_found} ->
                     load_template_source(Name, Apps, [App|Tried])
             end
