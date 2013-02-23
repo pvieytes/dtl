@@ -1,3 +1,10 @@
 PROGRAM = test_app
 
-include ../../../Makefile.common
+program: ebin/$(PROGRAM).app
+
+ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
+	mkdir -p ebin
+	cp $< $@
+
+clean:
+	rm -rf ebin

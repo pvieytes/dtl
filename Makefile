@@ -38,7 +38,7 @@
 PROGRAM = dtl
 PREREQ_BEAMS = ebin/dtl_library.beam ebin/dtl_loader.beam
 
-include Makefile.common
+include erl.mk
 
 TEST_APP = test/eunit_SUITE_data/test_app
 
@@ -48,9 +48,7 @@ clean-pre:
 CT_FLAGS = -pa $(TEST_APP)/ebin 
 CT_SUITES = eunit_SUITE
 
-# This was causing issues on Macs ... it has to be run manually on Macs.
-#
-# ct-pre:
-# 	$(MAKE) -C $(TEST_APP)
+ct-pre:
+	$(MAKE) -C $(TEST_APP)
 
 .PHONY: clean-pre ct-pre
