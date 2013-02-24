@@ -5,9 +5,6 @@ A full-featured port of the Django template engine to Erlang.
 **NOTE: The usage described in `3. Basic Usage' is still a work in
   progress, and dtl:render() remains something of a stub.**
 
-
-##Table of Contents
-
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
 3. [Configuration](#3-configuration)
