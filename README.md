@@ -1,31 +1,27 @@
 #Django Template Language
 
-
 A full-featured port of the Django template engine to Erlang.
 
 **NOTE: The usage described in `3. Basic Usage' is still a work in
   progress, and dtl:render() remains something of a stub.**
 
+
 ##Table of Contents
 
-1. Introduction
-2. Getting Started
-  a. Installation
-  b. Configuration
-3. Basic Usage
-4. Syntax
-5. Context
-  a. Context Processors
-6. Loader Modules
-7. Custom Filters
-8. Custom Tags
-  a. Simple Tags
-  b. Complex Tags
-9. Troubleshooting
-10. FAQ
-11. Support/Getting Help
-12. API Documentation
-13. Roadmap
+1. [Introduction](#1-introduction)
+2. [Installation](#2-installation)
+3. [Configuration](#3-configuration)
+4. [Basic Usage](#4-basic-usage)
+5. [Syntax](#5-syntax)
+6. [Context and Context Processors](#6-context-and-context-processors)
+7. [Loader Modules](#7-loader-modules)
+8. [Custom Filters](#8-custom-filters)
+9. [Custom Tags](#9-custom-tags)
+10. [Troubleshooting](#10-troubleshooting)
+11. [FAQ](#11-faq)
+12. [Support/Getting Help](#12-supportgetting-help)
+13. [API Documentation](#13-api-documentation)
+14. [Roadmap](#14-roadmap)
 
 
 ##1. Introduction
@@ -35,9 +31,8 @@ in Erlang. I hope to create a feature-complete port, using the same data
 types and striving for parity with the Python API and the base
 filter/tag set included in Django.
 
-##2. Getting Started
 
-###2a. Installation
+##2. Installation
 
 To install the latest version, add this to your dependency list in
 rebar.config:
@@ -47,33 +42,33 @@ rebar.config:
 and run `rebar get-deps` and `rebar compile`. Refer to the [rebar
 documentation](https://github.com/basho/rebar) if this is unclear.
 
-###2b. Configuration
+##3. Configuration
 
 The following are the configuration keys for the `dtl` app, their
 expected types, and any default values:
 
-|Key                |Type               |Default                        |
-|-------------------|-------------------|-------------------------------|
-|apps               |[atom()]           |[]                             |
-|debug              |boolean()          |false                          |
-|context_processors |[{atom(), atom()}] |[]                             |
-|template_dirs      |[list()]           |[]                             |
-|template_loaders   |[atom()]           |[dtl_fs_loader, dtl_app_loader]|
+|Key                  |Type                 |Default                           |
+|---------------------|---------------------|----------------------------------|
+|apps                 |`[atom()]`           |`[]`                              |
+|debug                |`boolean()`          |`false`                           |
+|context\_processors  |`[{atom(), atom()}]` |`[]`                              |
+|template\_dirs       |`[list()]`           |`[]`                              |
+|template\_loaders    |`[atom()]`           |`[dtl_fs_loader, dtl_apps_loader]`|
 
-**apps**: A list of apps that the dtl_app_loader should use.
+**apps**: A list of apps that the `dtl_apps_loader` should use.
 
 **debug**: Set `true` to allow more detailed debugging output in
     rendered templates, `false` otherwise.
 
-**template_dirs**: A list of arbitrary file system locations where
+**template\_dirs**: A list of arbitrary file system locations where
     `dtl_fs_loader` will look for templates.
 
-template_loaders
+**template\_loaders**:
     A list of modules implementing the `dtl_loader` behaviour. During
     template lookup, they will be tried in the order specified.
 
 
-##3. Basic usage
+##4. Basic usage
 
 See "5. Context" for information on setting context variables in your
 templates, and "6. Loader Modules" for information on where to store
@@ -109,7 +104,7 @@ Render the first of several found templates:
     %% ...
 
 
-##4. Syntax
+##5. Syntax
 
 Template syntax is identical to Django template syntax. Please report
 any observable differences.
@@ -117,7 +112,7 @@ any observable differences.
     https://docs.djangoproject.com/en/dev/topics/templates/
 
 
-##5. Context
+##6. Context and Context Processors
 
 Contexts are the primary means of transmitting data from application
 code to Django templates. Any value that is accessible on a context
@@ -130,7 +125,7 @@ will be accessible in any template into which the context is loaded:
     {ok, Bin} = dtl:render(Tpl, Ctx).
 
 
-###5a. Context Processors
+###6.1. Context Processors
 
 A user may specify a list of {Mod, Fun} tuples which will be called, in
 order, when initializing a new context. Each function should return a
@@ -149,16 +144,16 @@ Context processors are specified in application config.
 Now, a template could access `time` and `date` variables.
 
 
-#6. Loader Modules
+##7. Loader Modules
 
 DTL comes with two template loader modules, which are described here:
 
-**dtl_fs_loader**: This loader tries each of the configured
+**dtl\_fs\_loader**: This loader tries each of the configured
     `template_dirs`, in order, to see if the named template exists in
     one of them. Only templates contained in one of these directories
     will be found.
 
-**dtl_app_loader**: This loader searches in "templates" in the "priv"
+**dtl\_apps\_loader**: This loader searches in "templates" in the "priv"
     directory of each app specified with the `apps` configuration
     option.  That is, "index.html" would be searched for at
     foo/priv/templates/index.html if `foo` were included in the `apps`
@@ -207,48 +202,48 @@ copy a template from a web service (!):
         end.
 
 
-##7. Custom Filters
+##8. Custom Filters
 
 Empty.
 
 
-##8. Custom Tags
+##9. Custom Tags
 
 Empty.
 
 
-##8a. Simple Tags
+##9.1. Simple Tags
 
 Empty.
 
 
-##8b. Complex Tags
+##9.2. Complex Tags
 
 Empty.
 
 
-##9. Troubleshooting
+##10. Troubleshooting
 
 Empty.
 
 
-##10. FAQ
+##11. FAQ
 
 Empty.
 
 
-##11. Support/Getting Help
+##12. Support/Getting Help
 
 Empty.
 
 
-##12. API Documentation
+##13. API Documentation
 
 API functions are all documented in the source code, formatted
 documentation is a work in progress.
 
 
-##13. Roadmap
+##14. Roadmap
 
 * Base lexer and parser.
 * Node/NodeList rendering, API.
@@ -257,3 +252,4 @@ documentation is a work in progress.
 * Filter interfaces.
 * Library management.
 * Base Django tags and filters.
+
