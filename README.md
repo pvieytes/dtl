@@ -1,89 +1,82 @@
-Django Template Language
-------------------------
+#Django Template Language
+
 
 A full-featured port of the Django template engine to Erlang.
 
-NOTE: The usage described in `3. Basic Usage' is still a work in
-      progress, and dtl:render() remains a stub.
+**NOTE: The usage described in `3. Basic Usage' is still a work in
+  progress, and dtl:render() remains something of a stub.**
 
-Table of Contents:
-    1. Introduction
-    2. Getting Started
-        a. Installation
-        b. Configuration
-    3. Basic Usage
-    4. Syntax
-    5. Context
-        a. Context Processors
-    6. Loader Modules
-    7. Custom Filters
-    8. Custom Tags
-        a. Simple Tags
-        b. Complex Tags
-    9. Troubleshooting
-    10. FAQ
-    11. Support/Getting Help
-    12. API Documentation
-    13. Roadmap
-
+##Table of Contents
 
 1. Introduction
----------------
+2. Getting Started
+  a. Installation
+  b. Configuration
+3. Basic Usage
+4. Syntax
+5. Context
+  a. Context Processors
+6. Loader Modules
+7. Custom Filters
+8. Custom Tags
+  a. Simple Tags
+  b. Complex Tags
+9. Troubleshooting
+10. FAQ
+11. Support/Getting Help
+12. API Documentation
+13. Roadmap
+
+
+##1. Introduction
+
 This project is an effort to fully implement the Django template engine
 in Erlang. I hope to create a feature-complete port, using the same data
 types and striving for parity with the Python API and the base
 filter/tag set included in Django.
 
+##2. Getting Started
 
-2. Getting Started
-------------------
-2a. Installation
+###2a. Installation
 
 To install the latest version, add this to your dependency list in
 rebar.config:
 
     {dtl, ".*", {git, "git://github.com/oinksoft/dtl.git", "master"}}
 
-and run `rebar get-deps` and `rebar compile`. Refer to the rebar
-documentation if this is unclear:
+and run `rebar get-deps` and `rebar compile`. Refer to the [rebar
+documentation](https://github.com/basho/rebar) if this is unclear.
 
-    https://github.com/basho/rebar
+###2b. Configuration
 
-
-2b. Configuration
-
-The following are the configuration keys for the `dtl' app, their
+The following are the configuration keys for the `dtl` app, their
 expected types, and any default values:
 
-    Key                 Type                Default
-    ----------------    ---------           ---------------------------
-    apps                [atom()]            []
-    debug               boolean()           false
-    context_processors  [{atom(), atom()}]  []
-    template_dirs       [list()]            []
-    template_loaders    [atom()]            [dtl_fs_loader,
-                                             dtl_app_loader]
+|Key                |Type               |Default                        |
+|-------------------|-------------------|-------------------------------|
+|apps               |[atom()]           |[]                             |
+|debug              |boolean()          |false                          |
+|context_processors |[{atom(), atom()}] |[]                             |
+|template_dirs      |[list()]           |[]                             |
+|template_loaders   |[atom()]           |[dtl_fs_loader, dtl_app_loader]|
 
-apps
-    A list of apps that the dtl_app_loader should use.
+**apps**: A list of apps that the dtl_app_loader should use.
 
-debug
-    Set `true' to allow more detailed debugging output in rendered
-    templates, `false' otherwise.
+**debug**: Set `true` to allow more detailed debugging output in
+    rendered templates, `false` otherwise.
 
-template_dirs
-    A list of arbitrary file system locations where `dtl_fs_loader' will
-    look for templates.
+**template_dirs**: A list of arbitrary file system locations where
+    `dtl_fs_loader` will look for templates.
 
 template_loaders
-    A list of modules implementing the `dtl_loader' behaviour. During
+    A list of modules implementing the `dtl_loader` behaviour. During
     template lookup, they will be tried in the order specified.
 
 
-3. Basic usage
---------------
-See `5. Context' for information on setting context variables in your
-templates, and `6. Loader Modules' for information on where to store
+##3. Basic usage
+
+See "5. Context" for information on setting context variables in your
+templates, and "6. Loader Modules" for information on where to store
 your template files.
 
 Render a template:
@@ -116,16 +109,16 @@ Render the first of several found templates:
     %% ...
 
 
-4. Syntax
----------
+##4. Syntax
+
 Template syntax is identical to Django template syntax. Please report
 any observable differences.
 
     https://docs.djangoproject.com/en/dev/topics/templates/
 
 
-5. Context
-----------
+##5. Context
+
 Contexts are the primary means of transmitting data from application
 code to Django templates. Any value that is accessible on a context
 will be accessible in any template into which the context is loaded:
@@ -137,7 +130,7 @@ will be accessible in any template into which the context is loaded:
     {ok, Bin} = dtl:render(Tpl, Ctx).
 
 
-5a. Context Processors
+###5a. Context Processors
 
 A user may specify a list of {Mod, Fun} tuples which will be called, in
 order, when initializing a new context. Each function should return a
@@ -153,23 +146,23 @@ Context processors are specified in application config.
 
     application:set_env(dtl, context_processors, [{my_app, process_time}]).
 
-Now, a template could access `time' and `date' variables.
+Now, a template could access `time` and `date` variables.
 
 
-6. Loader Modules
------------------
+#6. Loader Modules
+
 DTL comes with two template loader modules, which are described here:
 
-dtl_fs_loader
-    This loader tries each of the configured `template_dirs', in order,
-    to see if the named template exists in one of them. Only templates
-    contained in one of these directories will be found.
+**dtl_fs_loader**: This loader tries each of the configured
+    `template_dirs`, in order, to see if the named template exists in
+    one of them. Only templates contained in one of these directories
+    will be found.
 
-dtl_app_loader
-    This loader searches in "templates" in the "priv" directory of each
-    app specified with the `apps' configuration option. That is,
-    "index.html" would be searched for at foo/priv/templates/index.html
-    if `foo' were included in the `apps' configuration option.
+**dtl_app_loader**: This loader searches in "templates" in the "priv"
+    directory of each app specified with the `apps` configuration
+    option.  That is, "index.html" would be searched for at
+    foo/priv/templates/index.html if `foo` were included in the `apps`
+    configuration option.
 
 You can also implement your own loaders. Here is a loader that tries to
 copy a template from a web service (!):
@@ -214,50 +207,53 @@ copy a template from a web service (!):
         end.
 
 
-7. Custom Filters
------------------
+##7. Custom Filters
+
 Empty.
 
 
-8. Custom Tags
----------------
+##8. Custom Tags
+
 Empty.
 
 
-8a. Simple Tags
+##8a. Simple Tags
+
 Empty.
 
 
-8b. Complex Tags
+##8b. Complex Tags
+
 Empty.
 
 
-9. Troubleshooting
-------------------
+##9. Troubleshooting
+
 Empty.
 
 
-10. FAQ
--------
+##10. FAQ
+
 Empty.
 
 
-11. Support/Getting Help
-------------------------
+##11. Support/Getting Help
+
 Empty.
 
 
-12. API Documentation
----------------------
-Empty.
+##12. API Documentation
+
+API functions are all documented in the source code, formatted
+documentation is a work in progress.
 
 
-13. Roadmap
------------
+##13. Roadmap
+
 * Base lexer and parser.
-* Contexts.
 * Node/NodeList rendering, API.
 * Debug lexer and parser.
 * Tag interfaces.
 * Filter interfaces.
+* Library management.
 * Base Django tags and filters.
