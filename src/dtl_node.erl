@@ -37,7 +37,7 @@ render_list(NodeList, Ctx) ->
 -spec render_list(dtl_nodelist(), dtl_context(), [binary()]) -> [binary()].
 render_list([Node|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
-render_list([], Ctx, Bits) -> lists:reverse(Bits).
+render_list([], _Ctx, Bits) -> lists:reverse(Bits).
 
 %% @doc Renders a single node.
 -spec render(dtl_node(), dtl_context()) -> binary().

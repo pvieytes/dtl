@@ -43,4 +43,5 @@ render(Name, PList) when is_list(PList) ->
 render(Name, Ctx) ->
     %% TODO: Switch on error condition.
     {ok, Tpl} = dtl_loader:get_template(Name),
-    dtl_template:render(Tpl, Ctx).
+    {ok, Out, _Ctx2} = dtl_template:render(Tpl, Ctx),
+    {ok, Out}.

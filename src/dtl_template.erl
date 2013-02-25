@@ -44,9 +44,9 @@ render(#dtl_tpl{nodelist = NodeList},
     %% Push onto the render context: This is so that {% assign %} and
     %% similar tags can modify the context safely.
     Ctx2 = Ctx#dtl_ctx{render_context = dtl_context:push(RenderCtx)},
-    {ok, Out} = dtl_node:render_list(NodeList, Ctx2),
+    {ok, OutList} = dtl_node:render_list(NodeList, Ctx2),
     %% No need to pop the render context, just reuse the original one.
-    {ok, Out, Ctx}.
+    {ok, iolist_to_binary(OutList), Ctx}.
 
 %% @doc Compile a string to a nodelist.
 -spec compile_string(list() | binary()) -> dtl_nodelist().
