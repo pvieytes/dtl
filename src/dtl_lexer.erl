@@ -86,8 +86,7 @@ make_token(Src = <<?BLOCK_TAG_START, Rest/binary>>, true, true) ->
 %% Turn everything in {% verbatim %} into a text token.
 make_token(Src, _InTag, true) -> {{?TOKEN_TEXT, Src}, true};
 %% If not in a tag, it's always a text token.
-make_token(Bit, false, Verbatim) ->
-    {{?TOKEN_TEXT, Bit}, Verbatim};
+make_token(Bit, false, Verbatim) -> {{?TOKEN_TEXT, Bit}, Verbatim};
 %% Chop the {{, }}, and extra whitespace off of variable tags.
 make_token(<<?VARIABLE_TAG_START, Rest/binary>>, true, Verbatim) ->
     {{?TOKEN_VAR, strip_token(Rest)}, Verbatim};

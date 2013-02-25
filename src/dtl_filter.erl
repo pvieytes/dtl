@@ -23,3 +23,7 @@
 %% @doc Functions for running and creating template filters. See Django
 %%      docs for what a filter is ...
 -module(dtl_filter).
+
+-export([parse/1]).
+
+parse(_Src) -> {}.

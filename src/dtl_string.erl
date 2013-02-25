@@ -24,7 +24,35 @@
 %%      ported from Django project source code.
 -module(dtl_string).
 
--export([escape_re/1]).
+-export([escape_re/1,
+         safe_list_to_atom/1,
+         smart_split/1]).
+
+%% Regex for splitting block tag tokens.
+%%
+%% smart_split(<<"A fish with a \"wish\" id=4 123&*^098)*(">>) =
+%%     [<<"A">>, <<"fish">>, <<"with">>, <<"a">>, <<"\"wish\"">>,
+%%      <<"id=4">>, <<"123&*^098)*(">>]
+-define(TOKEN_PART_MATCHER,
+    %% 1. Capture all token parts.
+    "((?:"
+        %% 2. Any number of non-space, ', " characters (spaces and quote
+        %%    marks are our delimiters).
+        "[^\\s'\"]*"
+
+        %% Any number of quoted groups, optionally surrounded by
+        %% unquoted, non-quote, non-space text.
+        %%
+        %% Or, unquoted, non-quote, non-space text.
+        %% "" and '' must match.
+        "(?:"
+            %% Double quotes and any number of non
+            "(?:\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*')"
+            %% Any number of non-delimiters (see #2)
+            "[^\\s'\"]*"
+        ")+"
+    %% Or any number of non-space characters.
+    ")|\\S+)").
 
 %% @doc Escape an input string for use within a regular expression (so
 %%      that all characters are interpreted literally). Every character
@@ -40,3 +68,17 @@ escape_re_char(C) when C < $0;
                        C > $Z, C < $a, C /= $_;
                        C > $z  -> [$\\, C];
 escape_re_char(C) -> C.
+
+-spec smart_split(binary()) -> [binary()].
+smart_split(Subj) ->
+    {ok, Re} = re:compile(?TOKEN_PART_MATCHER),
+    {match, Parts} = re:run(Subj, Re, [{capture, first, binary}, global]),
+    [Part || [Part] <- Parts].
+
+-spec safe_list_to_atom(list()) -> atom() | error.
+safe_list_to_atom(L) ->
+    try list_to_existing_atom(L) of
+        A -> A
+    catch
+        _:_ -> error
+    end.

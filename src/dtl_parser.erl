@@ -23,7 +23,65 @@
 %% @doc Template parsing functions.
 -module(dtl_parser).
 
--export([parse/1]).
+-include("dtl.hrl").
+-include("dtl_compiler.hrl").
 
-parse(_Tokens) ->
-    {ok, []}.
+-export([new/1,
+         parse/1,
+         parse/2,
+         split_token/1]).
+
+-spec new([dtl_token()]) -> dtl_parser().
+new(Tokens) ->
+    #dtl_parser{tokens = Tokens,
+                tags = [],
+                filters = []}.
+
+-spec parse(dtl_parser()) ->
+    {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
+parse(Parse) -> parse(Parse, []).
+
+-spec parse(dtl_parser(), [atom()]) ->
+    {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
+parse(Parser = #dtl_parser{tokens = Tokens}, Until) ->
+    io:format("~p ~p~n", [Tokens, Until]),
+    parse_until(Parser, Tokens, Until, []).
+
+-spec parse_until(dtl_parser(), [dtl_token()], [atom()], dtl_nodelist()) ->
+    {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
+parse_until(Parser, [{?TOKEN_TEXT, Src}|Tokens], Until, Nodes) ->
+    parse_until(Parser, Tokens, Until, [Src|Nodes]);
+parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
+    FilterExpr = dtl_filter:parse(Src),
+    Node = dtl_node:new_var(FilterExpr),
+    parse_until(Parser, Tokens, Until, [Node|Nodes]);
+%% TODO: Clean up this function ...
+parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens], Until, Nodes) ->
+    case split_token(Src) of
+        [] -> {error, empty_block_tag};
+        [CmdBin|_Rest] ->
+            CmdString = binary_to_list(CmdBin),
+            case dtl_string:safe_list_to_atom(CmdString) of
+                error -> {error, unknown_tag};
+                Cmd ->
+                    case lists:member(Cmd, Until) of
+                        %% Is in the "parse until" list, 
+                        true -> {ok, Nodes, Parser#dtl_parser{tokens = AllTokens}};
+                        false ->
+                            Node = run_command(Parser, Cmd, Token),
+                            parse_until(Parser, Tokens, Until, [Node|Nodes])
+                    end
+            end
+    end;
+parse_until(Parser, [], [], Nodes) ->
+    {ok, lists:reverse(Nodes), Parser};
+parse_until(_Parser, [], _Until, _Nodes) ->
+    {error, unclosed_block_tag}.
+
+split_token(Src) ->
+    %% TODO: Add support for _("Text") like in Django.
+    dtl_string:smart_split(Src).
+
+run_command(_Parser, _Cmd, _Token) ->
+    %% Stub, pending library functions.
+    ok.

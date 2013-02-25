@@ -31,3 +31,13 @@ escape_test_() ->
      ?_assertEqual("", dtl_string:escape_re("")),
      ?_assertEqual("123", dtl_string:escape_re("123")),
      ?_assertEqual("\\.__\\.\\-\\-", dtl_string:escape_re(".__.--"))].
+
+safe_split_test_() ->
+    [?_assertEqual([<<"Hello">>, <<"\"Dr. Evil\",">>, <<"we">>, <<"meet">>, <<"again.">>],
+                   dtl_string:smart_split(
+                       <<"Hello \"Dr. Evil\", we meet again.">>
+                   ))].
+
+safe_list_to_atom_test_() ->
+    [?_assertEqual(error, dtl_string:safe_list_to_atom("alkjdlakjdlaksjd")),
+     ?_assertEqual(foo, dtl_string:safe_list_to_atom("foo"))].

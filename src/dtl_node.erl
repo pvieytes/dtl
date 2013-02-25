@@ -25,9 +25,19 @@
 %%      recursively rendering nodelists, which in turn render nodes.
 -module(dtl_node).
 
--export([render_list/2]).
+-export([new_var/1,
+         render_list/2,
+         render_var/2]).
 
 -include("dtl.hrl").
+
+-spec new_var(dtl_filter_expr()) -> dtl_node().
+new_var(FilterExpr) ->
+    #dtl_node{renderer = {?MODULE, render_var},
+              state = FilterExpr}.
+
+-spec render_var(dtl_node(), dtl_context()) -> binary().
+render_var(_Node, _Ctx) -> <<>>.
 
 %% @doc Renders a list of nodes.
 -spec render_list(dtl_nodelist(), dtl_context()) -> {ok, [binary()]}.

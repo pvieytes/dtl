@@ -31,4 +31,4 @@ setup() ->
 
 render_test_() ->
     {setup, fun setup/0,
-     [?_assertEqual({ok, <<>>}, dtl:render("test.html"))]}.
+     [?_assertEqual({ok, <<"Test\n">>}, dtl:render("test.html"))]}.

@@ -2,8 +2,11 @@
 
 A full-featured port of the Django template engine to Erlang.
 
-**NOTE: The usage described in `3. Basic Usage' is still a work in
-  progress, and dtl:render() remains something of a stub.**
+**NOTE: While this template engine's mechanics are in a working state,
+        I've yet to write most of the basic node renderers.
+
+        This notice will be removed once I've made the first tagged
+        release and the project is in a truly usable state.**
 
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
@@ -354,9 +357,8 @@ documentation is a work in progress.
 
 ##14. Roadmap
 
-* Base parser.
-* Debug lexer and parser.
-* Tag interfaces.
-* Filter interfaces.
 * Library management.
 * Base Django tags and filters.
+* Tag interfaces.
+* Filter interfaces.
+* Debug lexer and parser.

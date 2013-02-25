@@ -52,3 +52,4 @@
 -type dtl_template() :: #dtl_tpl{}.
 -type dtl_node() :: #dtl_node{} | list() | binary().
 -type dtl_nodelist() :: [dtl_node()].
+-type dtl_filter_expr() :: {}.
