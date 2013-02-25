@@ -243,10 +243,8 @@ documentation is a work in progress.
 ##14. Roadmap
 
 * Base lexer and parser.
-* Node/NodeList rendering, API.
 * Debug lexer and parser.
 * Tag interfaces.
 * Filter interfaces.
 * Library management.
 * Base Django tags and filters.
-
