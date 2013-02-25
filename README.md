@@ -209,7 +209,7 @@ in the sections below.
 
 ##8.1. Custom Tags
 
-`registered\_tags` returns a list of any of the following:
+`registered_tags` returns a list of any of the following:
 
 **NodeFunction**: `NodeFunction` is the name of a function that returns
     a `dtl_node()` which should have its `renderer` field set and record
