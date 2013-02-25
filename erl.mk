@@ -59,7 +59,7 @@ BEAMS := $(shell find src -name '*.erl' \
 # Raw distributed module list.
 MAIN_ERLS := $(shell find src -name '*.erl' -not -name '*tests.erl')
 MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
-	-exec basename -s .erl {} \;)
+	-exec basename {} .erl \;)
 
 # Distributed module list, as an erlang term.
 #
