@@ -78,10 +78,11 @@ tokenize_bits([], Tokens, _InTag, _Verbatim) -> lists:reverse(Tokens).
 make_token(Src = <<?BLOCK_TAG_START, Rest/binary>>, true, true) ->
     Stripped = strip_token(Rest),
     EndsVerbatim = Stripped =:= <<"endverbatim">>,
-    case EndsVerbatim of
-        true -> {{?TOKEN_BLOCK, Stripped}, false};
-        false -> {{?TOKEN_TEXT, Src}, true}
-    end;
+    Token = case EndsVerbatim of
+        true -> {?TOKEN_BLOCK, Stripped};
+        false -> {?TOKEN_TEXT, Src}
+    end,
+    {Token, not EndsVerbatim};
 %% Throw everything out in {% verbatim %}.
 make_token(Src, _InTag, true) -> {{?TOKEN_TEXT, Src}, true};
 %% If not in a tag, it's always a text token.
