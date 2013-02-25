@@ -42,3 +42,10 @@ block_tag_and_text_test_() ->
                      {?TOKEN_BLOCK, <<"endblock">>},
                      {?TOKEN_TEXT, <<" ">>}],
                     dtl_lexer:tokenize(" {% block oink %} Content {% endblock %} "))]}.
+
+verbatim_test_() ->
+    {setup, fun setup/0,
+     [?_assertEqual([{?TOKEN_BLOCK, <<"verbatim">>},
+                     {?TOKEN_TEXT, <<"{% Oink %}">>},
+                     {?TOKEN_BLOCK, <<"endverbatim">>}],
+                    dtl_lexer:tokenize("{% verbatim %}{% Oink %}{% endverbatim %}"))]}.

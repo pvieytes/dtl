@@ -73,17 +73,27 @@ tokenize_bits([Bit|Bits], Tokens, InTag, Verbatim) ->
 tokenize_bits([], Tokens, _InTag, _Verbatim) -> lists:reverse(Tokens).
 
 %% Token factory.
-%%
-%% If not in a tag, it's always a text token.
 -spec make_token(binary(), boolean(), boolean()) -> dtl_token().
-make_token(Bit, false, _Verbatim) ->
-    {?TOKEN_TEXT, Bit};
+%% Check for {% endverbatim %} if in {% verbatim %}.
+make_token(Src = <<?BLOCK_TAG_START, Rest/binary>>, true, true) ->
+    Stripped = strip_token(Rest),
+    EndsVerbatim = Stripped =:= <<"endverbatim">>,
+    case EndsVerbatim of
+        true -> {{?TOKEN_BLOCK, Stripped}, false};
+        false -> {{?TOKEN_TEXT, Src}, true}
+    end;
+%% Throw everything out in {% verbatim %}.
+make_token(Src, _InTag, true) -> {{?TOKEN_TEXT, Src}, true};
+%% If not in a tag, it's always a text token.
+make_token(Bit, false, Verbatim) ->
+    {{?TOKEN_TEXT, Bit}, Verbatim};
 %% Chop the {{, }}, and extra whitespace off of variable tags.
-make_token(<<?VARIABLE_TAG_START, Rest/binary>>, true, _Verbatim) ->
-    {?TOKEN_VAR, strip_token(Rest)};
+make_token(<<?VARIABLE_TAG_START, Rest/binary>>, true, Verbatim) ->
+    {{?TOKEN_VAR, strip_token(Rest)}, Verbatim};
 %% Chop the {%, %}, and extra whitespace off of block tags.
 make_token(<<?BLOCK_TAG_START, Rest/binary>>, true, _Verbatim) ->
-    {?TOKEN_BLOCK, strip_token(Rest)};
+    Stripped = strip_token(Rest),
+    {{?TOKEN_BLOCK, Stripped}, Stripped =:= <<"verbatim">>};
 %% Chop the {#, #}, and extra whitespace off of comment tags, saving
 %% their contents, if "Translators" occurs in the comment. Otherwise,
 %% throw it all out.
