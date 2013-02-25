@@ -43,10 +43,11 @@
 %%      contain lists of other nodes, so template rendering is
 %%      recursive.
 -record(dtl_node, {
-    nodelists = [] :: [dtl_nodelist()]
+    nodelists = [] :: [dtl_nodelist()],
+    renderer :: {atom() | atom()} | fun()
 }).
 
 -type dtl_context() :: #dtl_ctx{}.
 -type dtl_template() :: #dtl_tpl{}.
--type dtl_node() :: #dtl_node{}.
--type dtl_nodelist() :: [#dtl_node{}].
+-type dtl_node() :: #dtl_node{} | list() | binary().
+-type dtl_nodelist() :: [dtl_node()].

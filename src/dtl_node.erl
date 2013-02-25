@@ -24,3 +24,26 @@
 %%      building block of templates, and templates are rendered by
 %%      recursively rendering nodelists, which in turn render nodes.
 -module(dtl_node).
+
+-export([render_list/2]).
+
+-include("dtl.hrl").
+
+%% @doc Renders a list of nodes.
+-spec render_list(dtl_nodelist(), dtl_context()) -> {ok, binary()}.
+render_list(NodeList, Ctx) ->
+    {ok, render_list(NodeList, Ctx, [])}.
+
+-spec render_list(dtl_nodelist(), dtl_context(), [binary()]) -> [binary()].
+render_list([Node|NodeList], Ctx, Bits) ->
+    render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
+render_list([], Ctx, Bits) -> lists:reverse(Bits).
+
+%% @doc Renders a single node.
+-spec render(dtl_node(), dtl_context()) -> binary().
+render(Node = #dtl_node{renderer = {M, F}}, Ctx) ->
+    M:F(Node, Ctx);
+render(Node = #dtl_node{renderer = Fun}, Ctx) ->
+    Fun(Node, Ctx);
+render(Node, _Ctx) when is_list(Node) -> list_to_binary(Node);
+render(Node, _Ctx) when is_binary(Node) -> Node.

@@ -38,16 +38,25 @@ new(Str) ->
 
 %% @doc Renders the provided template with the context (stub).
 -spec render(dtl_template(), dtl_context()) ->
-    {ok, binary()} | {error, atom()}.
-render(_Tpl, _Ctx) ->
-    {ok, <<>>}.
+    {ok, binary(), dtl_context()} | {error, atom()}.
+render(#dtl_tpl{nodelist = NodeList},
+       Ctx = #dtl_ctx{render_context = RenderCtx}) ->
+    %% Push onto the render context: This is so that {% assign %} and
+    %% similar tags can modify the context safely.
+    Ctx2 = Ctx#dtl_ctx{render_context = dtl_context:push(RenderCtx)},
+    {ok, Out} = dtl_node:render_list(NodeList, Ctx2),
+    %% No need to pop the render context, just reuse the original one.
+    {ok, Out, Ctx}.
 
+%% @doc Compile a string to a nodelist.
 -spec compile_string(list() | binary()) -> dtl_nodelist().
 compile_string(Str) ->
-    {Lexer, Parser} = case dtl_settings:debug() of
-        true -> {dtl_debug_lexer, dtl_debug_parser};
-        false -> {dtl_lexer, dtl_parser}
-    end,
+    {Lexer, Parser} = get_compiler(dtl_settings:debug()),
     Tokens = Lexer:tokenize(Str),
     {ok, NodeList} = Parser:parse(Tokens),
     NodeList.
+
+%% @doc `true' for Debug mode, `false' otherwise.
+-spec get_compiler(boolean()) -> {atom(), atom()}.
+get_compiler(true) -> {dtl_debug_lexer, dtl_debug_parser};
+get_compiler(false) -> {dtl_lexer, dtl_parser}.

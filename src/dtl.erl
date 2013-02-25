@@ -33,12 +33,14 @@
 render(Tpl) ->
     render(Tpl, dtl_context:new()).
 
-%% @doc Stub. Renders a template or returns an error.
--spec render(dtl_template(), [{term(), term()}])
-                -> {ok, binary()} | {error, atom()};
-            (dtl_template(), dtl_context())
-                -> {ok, binary()} | {error, atom()}.
-render(Tpl, PList) when is_list(PList) ->
-    render(Tpl, dtl_context:new(PList));
-render(Tpl, Ctx) ->
+%% @doc Creates and renders the template with the provided name.
+-spec render(list(), [{term(), term()}]) ->
+                {ok, binary()} | {error, atom()};
+            (list(), dtl_context()) ->
+                {ok, binary()} | {error, atom()}.
+render(Name, PList) when is_list(PList) ->
+    render(Name, dtl_context:new(PList));
+render(Name, Ctx) ->
+    %% TODO: Switch on error condition.
+    {ok, Tpl} = dtl_loader:get_template(Name),
     dtl_template:render(Tpl, Ctx).

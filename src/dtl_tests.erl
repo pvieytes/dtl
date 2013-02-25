@@ -25,5 +25,9 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
+setup() ->
+    application:set_env(dtl, template_loaders, [dtl_fs_loader, dtl_apps_loader]).
+
 render_test_() ->
-    [?_assertEqual({ok, <<>>}, dtl:render("test.html"))].
+    {setup, fun setup/0,
+     [?_assertEqual({ok, <<>>}, dtl:render("test.html"))]}.
