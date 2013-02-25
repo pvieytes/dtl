@@ -2,11 +2,11 @@
 
 A full-featured port of the Django template engine to Erlang.
 
-**NOTE: While this template engine's mechanics are in a working state,
-        I've yet to write most of the basic node renderers.
+    NOTE: While this template engine's mechanics are in a working state,
+          I've yet to write most of the basic node renderers.
 
-        This notice will be removed once I've made the first tagged
-        release and the project is in a truly usable state.**
+          This notice will be removed once I've made the first tagged
+          release and the project is in a truly usable state.**
 
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
