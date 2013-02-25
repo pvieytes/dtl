@@ -44,7 +44,8 @@
 %%      recursive.
 -record(dtl_node, {
     nodelists = [] :: [dtl_nodelist()],
-    renderer :: {atom() | atom()} | fun()
+    renderer :: {atom(), atom()} | fun(),
+    state
 }).
 
 -type dtl_context() :: #dtl_ctx{}.
