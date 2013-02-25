@@ -30,6 +30,8 @@
 
 -include("dtl_compiler.hrl").
 
+%% Main constituents of the template string splitting regex. Groups of
+%% these start and end combinations are captured.
 -define(SPLITTER_PARTS, [?BLOCK_TAG_START,
                          ?BLOCK_TAG_END,
                          ?VARIABLE_TAG_START,
@@ -46,6 +48,7 @@ tokenize(Str) ->
 
 %% Convenience function to create a regular expression for splitting up
 %% template source code.
+-spec make_splitter() -> {re_pattern, term(), term(), term()}.
 make_splitter() ->
     Expr = io_lib:format("(~s.*~s|~s.*~s|~s.*~s)", ?SPLITTER_PARTS),
     {ok, Re} = re:compile(Expr),

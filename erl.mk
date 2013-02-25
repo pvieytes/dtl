@@ -47,15 +47,17 @@
 ERLC ?= erlc
 EFLAGS ?=
 DIALYZER ?= dialyzer
+DIALYZER_FLAGS ?= -Wno_opaque
 CT_RUN ?= ct_run
 
 SHELL := bash
 
 # Files that require compilation.
-BEAMS = $(shell find src -name '*.erl' \
+BEAMS := $(shell find src -name '*.erl' \
 	| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
 
 # Raw distributed module list.
+MAIN_ERLS := $(shell find src -name '*.erl' -not -name '*tests.erl')
 MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
 	-exec basename -s .erl {} \;)
 
@@ -97,7 +99,8 @@ plt:
 		--apps kernel stdlib
 
 dialyze:
-	$(DIALYZER) --src src --plt .$(PROGRAM).plt --no_native
+	$(DIALYZER) $(DIALYZER_FLAGS) \
+		--src $(MAIN_ERLS) --plt .$(PROGRAM).plt --no_native
 
 # Hook stubs.
 clean-pre:

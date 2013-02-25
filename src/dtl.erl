@@ -28,10 +28,9 @@
 
 -include("dtl.hrl").
 
-%% @doc Stub. Renders a template or returns an error.
--spec render(dtl_template()) -> {ok, binary()} | {error, atom()}.
-render(Tpl) ->
-    render(Tpl, dtl_context:new()).
+%% @doc Creates and renders the template with the provided name.
+-spec render(list()) -> {ok, binary()} | {error, atom()}.
+render(Name) -> render(Name, dtl_context:new()).
 
 %% @doc Creates and renders the template with the provided name.
 -spec render(list(), [{term(), term()}]) ->

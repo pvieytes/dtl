@@ -92,16 +92,16 @@ update(Ctx, PList) ->
 
 %% @doc Looks up a value on all stacks, in top-to-bottom order.
 -spec fetch(dtl_context(), term()) -> {ok, term()} | undefined.
-fetch(#dtl_ctx{stack = []}, _K) ->
-    undefined;
-fetch(#dtl_ctx{stack = Stack}, K) ->
-    fetch(Stack, K);
-fetch([Head|Stack], K) ->
+fetch(#dtl_ctx{stack = []}, _K) -> undefined;
+fetch(#dtl_ctx{stack = Stack}, K) -> fetch_stack(Stack, K).
+
+-spec fetch_stack(list(), term()) -> {ok, term()} | undefined.
+fetch_stack([Head|Stack], K) ->
     case dict:find(K, Head) of
-        error -> fetch(Stack, K);
+        error -> fetch_stack(Stack, K);
         {ok, V} -> V
     end;
-fetch([], _K) -> undefined.
+fetch_stack([], _K) -> undefined.
 
 %% @doc Looks up a value on all stacks, in top-to-bottom order,
 %%      returning the default value if none is found.
@@ -117,7 +117,7 @@ fetch(Ctx, K, Def) ->
 %%      this function.
 -spec render_fetch(dtl_context(), term()) -> term() | undefined.
 render_fetch(#dtl_ctx{stack = [Head|_Stack]}, K) ->
-    fetch([Head], K).
+    fetch_stack([Head], K).
 
 -spec render_fetch(dtl_context(), term(), term()) -> term().
 render_fetch(Ctx, K, Def) ->

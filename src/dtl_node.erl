@@ -30,7 +30,7 @@
 -include("dtl.hrl").
 
 %% @doc Renders a list of nodes.
--spec render_list(dtl_nodelist(), dtl_context()) -> {ok, binary()}.
+-spec render_list(dtl_nodelist(), dtl_context()) -> {ok, [binary()]}.
 render_list(NodeList, Ctx) ->
     {ok, render_list(NodeList, Ctx, [])}.
 

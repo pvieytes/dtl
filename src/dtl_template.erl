@@ -32,7 +32,7 @@
 %% @doc Compiles the provided template source, returning the compiled
 %%      representation, suitable for use with other functions in this
 %%      module.
--spec new(list() | binary()) -> dtl_template().
+-spec new(binary()) -> dtl_template().
 new(Str) ->
     #dtl_tpl{nodelist = compile_string(Str)}.
 
@@ -49,7 +49,7 @@ render(#dtl_tpl{nodelist = NodeList},
     {ok, iolist_to_binary(OutList), Ctx}.
 
 %% @doc Compile a string to a nodelist.
--spec compile_string(list() | binary()) -> dtl_nodelist().
+-spec compile_string(binary()) -> dtl_nodelist().
 compile_string(Str) ->
     {Lexer, Parser} = get_compiler(dtl_settings:debug()),
     Tokens = Lexer:tokenize(Str),
