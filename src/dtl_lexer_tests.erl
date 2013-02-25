@@ -20,31 +20,25 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Common things needed for tokenizing and parsing Django
-%%      templates.
+%% @doc Tests for the production lexer.
+-module(dtl_lexer_tests).
 
--define(BLOCK_TAG_START, "{%").
--define(BLOCK_TAG_END, "%}").
--define(VARIABLE_TAG_START, "{{").
--define(VARIABLE_TAG_END, "}}").
--define(COMMENT_TAG_START, "{#").
--define(COMMENT_TAG_END, "#}").
+-include("dtl_compiler.hrl").
 
--define(SINGLE_BRACE_START, "{").
--define(SINGLE_BRACE_END, "}").
+-include_lib("eunit/include/eunit.hrl").
 
--define(TOKEN_TEXT, text).
--define(TOKEN_VAR, var).
--define(TOKEN_BLOCK, block).
--define(TOKEN_COMMENT, comment).
+setup() ->
+    application:set_env(dtl, debug, false).
 
--define(FIELD_SEPARATOR, "|").
--define(FIELD_ARGUMENT_SEPARATOR, ":").
--define(VARIABLE_ATTRIBUTE_SEPARATOR, ".").
--define(TRANSLATOR_COMMENT_MARK, "Translators").
+text_token_test_() ->
+    {setup, fun setup/0,
+     [?_assertEqual([{?TOKEN_TEXT, <<"Hello">>}], dtl_lexer:tokenize(<<"Hello">>))]}.
 
--type dtl_token_type() :: ?TOKEN_TEXT
-                       | ?TOKEN_VAR
-                       | ?TOKEN_BLOCK
-                       | ?TOKEN_COMMENT.
--type dtl_token() :: {dtl_token_type(), binary()}.
+block_tag_and_text_test_() ->
+    {setup, fun setup/0,
+     [?_assertEqual([{?TOKEN_TEXT, <<" ">>},
+                     {?TOKEN_BLOCK, <<"block oink">>},
+                     {?TOKEN_TEXT, <<" Content ">>},
+                     {?TOKEN_BLOCK, <<"endblock">>},
+                     {?TOKEN_TEXT, <<" ">>}],
+                    dtl_lexer:tokenize(" {% block oink %} Content {% endblock %} "))]}.

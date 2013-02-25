@@ -41,28 +41,64 @@
 
 %% @doc Traverses the provided template source code, generating a list
 %%      of tokens describing the basic structure.
--spec tokenize(binary()) -> [token()].
-tokenize(Str) ->
-    Bits = re:split(Str, make_splitter()),
-    tokenize_bits(Bits, [], false, false).
+-spec tokenize(binary()) -> [dtl_token()].
+tokenize(Src) ->
+    Bits = re:split(Src, make_splitter()),
+    %% Django strips out empty tokens here, we do that when creating the
+    %% tokens by discarding the bit.
+    tokenize_bits(Bits, [], false).
 
 %% Convenience function to create a regular expression for splitting up
 %% template source code.
 -spec make_splitter() -> {re_pattern, term(), term(), term()}.
 make_splitter() ->
-    Expr = io_lib:format("(~s.*~s|~s.*~s|~s.*~s)", ?SPLITTER_PARTS),
+    Expr = io_lib:format("(~s.*?~s|~s.*?~s|~s.*?~s)", ?SPLITTER_PARTS),
     {ok, Re} = re:compile(Expr),
     Re.
 
-%% Accumulator for tokenized bits.
-tokenize_bits([<<>>|Bits], Tokens, InTag, Verbatim) ->
-    tokenize_bits(Bits, Tokens, not InTag, Verbatim);
-tokenize_bits([Bit|Bits], Tokens, InTag, Verbatim) ->
-    {ok, Token, Verbatim2} = make_token(Bit, InTag, Verbatim),
-    tokenize_bits(Bits, [Token|Tokens], not InTag, Verbatim2);
-tokenize_bits([], Tokens, _InTag, _Verbatim) ->
-    lists:reverse(Tokens).
+%% Accumulator for tokenized bits. `InTag' is flipped on each recursion.
+%% A "tag" in this case is not a Django template tag, but rather a lexer
+%% tag, which is any bit that the splitter captured. The splitter, as
+%% defined, results in a list of the form [Tag, Text, Tag, Text, ...].
+%%
+%% Empty bit, discard it.
+-spec tokenize_bits([binary()], [dtl_token()], boolean()) -> [dtl_token()].
+tokenize_bits([<<>>|Bits], Tokens, InTag) ->
+    tokenize_bits(Bits, Tokens, not InTag);
+%% Non-empty bit, process it.
+tokenize_bits([Bit|Bits], Tokens, InTag) ->
+    Token = make_token(Bit, InTag),
+    tokenize_bits(Bits, [Token|Tokens], not InTag);
+%% Finished, return the token list.
+tokenize_bits([], Tokens, _InTag) -> lists:reverse(Tokens).
 
-%% Token factory function (stub).
-make_token(_Str, _InTag, _Verbatim) ->
-    {ok, token, _Verbatim}.
+%% Token factory.
+%%
+%% If not in a tag, it's always a text token.
+-spec make_token(binary(), boolean()) -> dtl_token().
+make_token(Bit, false) ->
+    {?TOKEN_TEXT, Bit};
+%% Chop the {{, }}, and extra whitespace off of variable tags.
+make_token(<<?VARIABLE_TAG_START, Rest/binary>>, true) ->
+    {?TOKEN_VAR, strip_token(Rest)};
+%% Chop the {%, %}, and extra whitespace off of block tags.
+make_token(<<?BLOCK_TAG_START, Rest/binary>>, true) ->
+    {?TOKEN_BLOCK, strip_token(Rest)};
+%% Chop the {#, #}, and extra whitespace off of comment tags, saving
+%% their contents, if "Translators" occurs in the comment. Otherwise,
+%% throw it all out.
+%%
+%% Django records line number on each step.
+make_token(<<?COMMENT_TAG_START, Rest/binary>>, true) ->
+    {?TOKEN_COMMENT, case binary:match(Rest, <<?TRANSLATOR_COMMENT_MARK>>) of
+        nomatch -> <<>>;
+        {_Pos, _Len} -> strip_token(Rest)
+     end}.
+
+%% Strip whitespace and tag marks off the provided token.
+%%
+%% Assume this is coming from make_token() and the first two characters
+%% have already been dropped.
+-spec strip_token(binary()) -> binary().
+strip_token(Bin) ->
+    re:replace(Bin, "^\\s*|\\s*..$", "", [global, {return, binary}]).

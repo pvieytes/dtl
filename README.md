@@ -354,7 +354,7 @@ documentation is a work in progress.
 
 ##14. Roadmap
 
-* Base lexer and parser.
+* Base parser.
 * Debug lexer and parser.
 * Tag interfaces.
 * Filter interfaces.
