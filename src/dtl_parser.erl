@@ -55,8 +55,9 @@ parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
     FilterExpr = dtl_filter:parse(Src),
     Node = dtl_node:new_var(FilterExpr),
     parse_until(Parser, Tokens, Until, [Node|Nodes]);
-%% TODO: Clean up this function ...
-parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens], Until, Nodes) ->
+%% TODO: Clean up this ugly function ...
+parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens],
+        Until, Nodes) ->
     case split_token(Src) of
         [] -> {error, empty_block_tag};
         [CmdBin|_Rest] ->
@@ -66,10 +67,16 @@ parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens], Until, Nod
                 Cmd ->
                     case lists:member(Cmd, Until) of
                         %% Is in the "parse until" list, 
-                        true -> {ok, Nodes, Parser#dtl_parser{tokens = AllTokens}};
+                        true ->
+                            {ok, Nodes,
+                             Parser#dtl_parser{tokens = AllTokens}};
                         false ->
-                            Node = run_command(Parser, Cmd, Token),
-                            parse_until(Parser, Tokens, Until, [Node|Nodes])
+                            {Node, Parser2} = run_command(Parser, Cmd, Token),
+                            %% Start over with tokens because the tag
+                            %% function may have modified them.
+                            parse_until(Parser2,
+                                        Parser2#dtl_parser.tokens,
+                                        Until, [Node|Nodes])
                     end
             end
     end;
