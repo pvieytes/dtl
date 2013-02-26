@@ -28,4 +28,5 @@ main(_Args) ->
     end, filelib:wildcard("src/*.erl")),
     {ok, Cwd} = file:get_cwd(),
     Docs = filename:join([Cwd, "doc"]),
-    edoc:files(Files, [{dir, Docs}]).
+    ok = edoc:files(Files, [{dir, Docs},
+                            {new, true}]).

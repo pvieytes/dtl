@@ -394,7 +394,7 @@ Please report any bugs as issues at this github project.
 
 ##13. API Documentation
 
-API documentation is regularly updated at https://oinksoft.com/static/doc/dtl
+API documentation is regularly updated at https://oinksoft.com/doc/dtl/
 
 
 ##14. Roadmap
