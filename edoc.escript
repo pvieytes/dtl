@@ -23,10 +23,11 @@
 
 %% @doc EDoc generation script.
 main(_Args) ->
+    {ok, Cwd} = file:get_cwd(),
     Files = lists:filter(fun (Filename) ->
         string:str(Filename, "tests.erl") =:= 0
-    end, filelib:wildcard("src/*.erl")),
-    {ok, Cwd} = file:get_cwd(),
+    end, filelib:wildcard(filename:join([Cwd, "src/*.erl"]))),
+    code:add_patha(filename:join([Cwd, "ebin"])),
     Docs = filename:join([Cwd, "doc"]),
     ok = edoc:files(Files, [{dir, Docs},
                             {new, true}]).
