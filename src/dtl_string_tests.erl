@@ -20,8 +20,7 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc String utilities for implementing the Django Template Language,
-%%      ported from Django project source code.
+%% @doc Tests for string utilities.
 -module(dtl_string_tests).
 
 -include_lib("eunit/include/eunit.hrl").

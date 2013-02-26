@@ -53,6 +53,7 @@ new(PList) ->
     Ctx2 = Ctx#dtl_ctx{render_context = new_base()},
     update(process_all(Ctx2), PList).
 
+%% Internal function to return a common context base.
 new_base() -> #dtl_ctx{}.
 
 %% TODO: Support some initial state (Django provides an HTTP request
@@ -95,6 +96,8 @@ update(Ctx, PList) ->
 fetch(#dtl_ctx{stack = []}, _K) -> undefined;
 fetch(#dtl_ctx{stack = Stack}, K) -> fetch_stack(Stack, K).
 
+%% Fetches a value from context stack, trying each in order from bottom
+%% to top.
 -spec fetch_stack(list(), term()) -> {ok, term()} | undefined.
 fetch_stack([Head|Stack], K) ->
     case dict:find(K, Head) of
@@ -115,10 +118,15 @@ fetch(Ctx, K, Def) ->
 %% @doc Render contexts have different scope rules: Only look at the
 %%      head of the stack. End users shouldn't have much reason to use
 %%      this function.
+%%      
+%%      Returns `undefined' if the key is not defined on the render
+%%      context.
 -spec render_fetch(dtl_context(), term()) -> term() | undefined.
 render_fetch(#dtl_ctx{stack = [Head|_Stack]}, K) ->
     fetch_stack([Head], K).
 
+%% @doc Same as render_fetch/2, but returns the default value if the key
+%%      is not defined on the context.
 -spec render_fetch(dtl_context(), term(), term()) -> term().
 render_fetch(Ctx, K, Def) ->
     case render_fetch(Ctx, K) of

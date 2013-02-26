@@ -47,10 +47,12 @@ render(Name, Ctx) ->
     {ok, Out, _Ctx2} = dtl_template:render(Tpl, Ctx),
     {ok, Out}.
 
+%% @doc Find some setting, defaults to `undefined'.
 -spec setting(atom()) -> term().
 setting(Name) ->
     setting(Name, undefined).
 
+%% @doc Find some setting, or return the provided default.
 -spec setting(atom(), term()) -> term().
 setting(Name, Default) ->
     {ok, Mod} = application:get_env(dtl, settings_module),

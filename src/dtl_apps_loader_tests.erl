@@ -20,7 +20,7 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tests for the filesystem loader.
+%% @doc Tests for the app directories loader.
 -module(dtl_apps_loader_tests).
 
 -include_lib("eunit/include/eunit.hrl").

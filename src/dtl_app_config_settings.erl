@@ -26,6 +26,8 @@
 
 -export([setting/2]).
 
+%% @doc Returns the requested setting based on the value of the same key
+%%      in `dtl' application config.
 -spec setting(atom(), term()) -> term().
 setting(Key, Default) ->
     case application:get_env(dtl, Key) of

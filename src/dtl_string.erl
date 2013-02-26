@@ -20,8 +20,7 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc String utilities for implementing the Django Template Language,
-%%      ported from Django project source code.
+%% @doc String utilities.
 -module(dtl_string).
 
 -export([escape_re/1,
@@ -29,29 +28,25 @@
          smart_split/1]).
 
 %% Regex for splitting block tag tokens.
-%%
-%% smart_split(<<"A fish with a \"wish\" id=4 123&*^098)*(">>) =
-%%     [<<"A">>, <<"fish">>, <<"with">>, <<"a">>, <<"\"wish\"">>,
-%%      <<"id=4">>, <<"123&*^098)*(">>]
 -define(TOKEN_PART_MATCHER,
     %% 1. Capture all token parts.
     "((?:"
-        %% 2. Any number of non-space, ', " characters (spaces and quote
+        %% 1.1. Any number of non-space, ', " characters (spaces and quote
         %%    marks are our delimiters).
         "[^\\s'\"]*"
 
-        %% Any number of quoted groups, optionally surrounded by
-        %% unquoted, non-quote, non-space text.
+        %% 1.2. Any number of quoted groups, optionally surrounded by
+        %%      unquoted, non-quote, non-space text.
         %%
-        %% Or, unquoted, non-quote, non-space text.
-        %% "" and '' must match.
+        %% 1.3. Or, unquoted, non-quote, non-space text.
+        %%      "" and '' must match.
         "(?:"
-            %% Double quotes and any number of non
+            %% 1.3.1 Double quotes and any number of non-quotes in-between.
             "(?:\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*')"
-            %% Any number of non-delimiters (see #2)
+            %% 1.3.2. Any number of non-delimiters (see #1.1)
             "[^\\s'\"]*"
         ")+"
-    %% Or any number of non-space characters.
+    %% 2. Or any number of non-space characters.
     ")|\\S+)").
 
 %% @doc Escape an input string for use within a regular expression (so
@@ -69,6 +64,11 @@ escape_re_char(C) when C < $0;
                        C > $z  -> [$\\, C];
 escape_re_char(C) -> C.
 
+%% @doc Splits on spaces, except within quoted characters "" and ''.
+%%
+%%      Parts = smart_split(<<"A fish with a \"wish\" id=4 123&*^098)*(">>),
+%%      Parts = [<<"A">>, <<"fish">>, <<"with">>, <<"a">>,
+%%               <<"\"wish\"">>, <<"id=4">>, <<"123&*^098)*(">>].
 -spec smart_split(binary()) -> [binary()].
 smart_split(Subj) ->
     {ok, Re} = re:compile(?TOKEN_PART_MATCHER),

@@ -20,7 +20,7 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tests for the filesystem loader.
+%% @doc Tests for contexts.
 -module(dtl_context_tests).
 
 -export([example_processor/0,
