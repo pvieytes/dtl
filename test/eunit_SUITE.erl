@@ -32,7 +32,6 @@ all() -> [eunit].
 
 eunit(Config) ->
     dtl_ets_settings:init(),
-    %% Create ETS table and set as module
     Data = proplists:get_value(data_dir, Config),
     TplDir = filename:join(Data, "templates"),
     ok = application:start(dtl),

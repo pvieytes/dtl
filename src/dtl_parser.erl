@@ -44,7 +44,6 @@ parse(Parse) -> parse(Parse, []).
 -spec parse(dtl_parser(), [atom()]) ->
     {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
 parse(Parser = #dtl_parser{tokens = Tokens}, Until) ->
-    io:format("~p ~p~n", [Tokens, Until]),
     parse_until(Parser, Tokens, Until, []).
 
 -spec parse_until(dtl_parser(), [dtl_token()], [atom()], dtl_nodelist()) ->
