@@ -20,43 +20,7 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Core API functions, some convenient shortcuts.
+%% @doc Settings module interface.
 -module(dtl_settings).
 
--export([apps/0,
-         context_processors/0,
-         debug/0,
-         template_dirs/0,
-         template_loaders/0]).
-
-%% @doc Returns a list of apps that should be searched for templates at
-%%      runtime.
--spec apps() -> [atom()].
-apps() -> env(apps).
-
-%% @doc A list of {Mod, Fun} tuples, representing functions that receive
-%%      a single parameter, that being the existing context. In Django,
-%%      parameter is the request object, but there is no analog to this
-%%      a plain template engine.
--spec context_processors() -> [{atom(), atom()}].
-context_processors() -> env(context_processors).
-
-%% @doc Returns `true' if the application is configured in "debug" mode,
-%%      `false' otherwise.
--spec debug() -> boolean().
-debug() -> env(debug).
-
-%% @doc Returns the application's configured list of template
-%%      directories.
--spec template_dirs() -> [list()].
-template_dirs() -> env(template_dirs).
-
-%% @doc Returns the configured list of template loader modules. All
-%%      should implement the `dtl_loader' behaviour.
--spec template_loaders() -> [atom()].
-template_loaders() -> env(template_loaders).
-
-env(K) ->
-    %% Defaults should be defined for every env var.
-    {ok, V} = application:get_env(dtl, K),
-    V.
+-callback setting(atom(), term()) -> term().

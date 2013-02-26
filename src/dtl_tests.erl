@@ -26,8 +26,8 @@
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
-    application:set_env(dtl, apps, [test_app]),
-    application:set_env(dtl, template_loaders, [dtl_fs_loader, dtl_apps_loader]).
+    dtl_ets_settings:set(apps, [test_app]),
+    dtl_ets_settings:set(template_loaders, [dtl_fs_loader, dtl_apps_loader]).
 
 render_test_() ->
     {setup, fun setup/0,

@@ -20,24 +20,27 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tests for the filesystem loader.
--module(dtl_settings_tests).
+%% @doc ETS-backed settings module. Used in unit tests.
+-module(dtl_ets_settings).
+-behaviour(dtl_settings).
 
--include_lib("eunit/include/eunit.hrl").
+-export([init/0,
+         set/2,
+         setting/2]).
 
-settings_test_() ->
-    Apps = [dtl],
-    Processors = [{foo, bar}],
-    Debug = false,
-    TemplateDirs = [file:get_cwd()],
-    Loaders = [dtl_fs_loader],
-    application:set_env(dtl, apps, Apps),
-    application:set_env(dtl, context_processors, Processors),
-    application:set_env(dtl, debug, Debug),
-    application:set_env(dtl, template_dirs, TemplateDirs),
-    application:set_env(dtl, template_loaders, Loaders),
-    [?_assertEqual(dtl_settings:apps(), Apps),
-     ?_assertEqual(dtl_settings:context_processors(), Processors),
-     ?_assertEqual(dtl_settings:debug(), Debug),
-     ?_assertEqual(dtl_settings:template_dirs(), TemplateDirs),
-     ?_assertEqual(dtl_settings:template_loaders(), Loaders)].
+-define(TABLE, dtl_ets_settings).
+
+-spec init() -> atom().
+init() ->
+    ets:new(?TABLE, [named_table, public]).
+
+-spec set(atom(), term()) -> boolean().
+set(Key, Val) ->
+    ets:insert(?TABLE, {Key, Val}).
+
+-spec setting(atom(), term()) -> term().
+setting(Key, Default) ->
+    case ets:lookup(?TABLE, Key) of
+        [{Key, Val}] -> Val;
+        [] -> dtl_app_config_settings:setting(Key, Default)
+    end.

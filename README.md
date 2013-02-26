@@ -39,23 +39,26 @@ rebar.config:
 
     {dtl, ".*", {git, "git://github.com/oinksoft/dtl.git", "master"}}
 
-and run `rebar get-deps` and `rebar compile`. Refer to the [rebar
+and run `rebar get-deps`, then `rebar compile`. Refer to the [rebar
 documentation](https://github.com/basho/rebar) if this is unclear.
 
 ##3. Configuration
 
-The following are the configuration keys for the `dtl` app, their
-expected types, and any default values:
+These are the application-wide configuration keys:
 
 |Key                  |Type                 |Default                           |
 |---------------------|---------------------|----------------------------------|
 |apps                 |`[atom()]`           |`[]`                              |
 |debug                |`boolean()`          |`false`                           |
 |context\_processors  |`[{atom(), atom()}]` |`[]`                              |
+|settings\_module     |`atom()`             |`dtl_app_config_settings`         |
 |template\_dirs       |`[list()]`           |`[]`                              |
 |template\_loaders    |`[atom()]`           |`[dtl_fs_loader, dtl_apps_loader]`|
 
 **apps**: A list of apps that the `dtl_apps_loader` should use.
+
+**context\_processors**: A list of {Module, Function} two-tuples. Which
+    are processed in order during context creation. See 6. Contexts.
 
 **debug**: Set `true` to allow more detailed debugging output in
     rendered templates, `false` otherwise.
@@ -65,7 +68,47 @@ expected types, and any default values:
 
 **template\_loaders**:
     A list of modules implementing the `dtl_loader` behaviour. During
-    template lookup, they will be tried in the order specified.
+    template lookup, they will be tried in the order specified. See 7.
+    Loader Modules.
+
+At the lowest level, these settings are managed by application env vars.
+The defaults in the above table are all defined at this level.
+
+Users can look up settings with `dtl:setting/1`:
+
+    Apps = dtl:setting(apps).
+
+
+###3.1 Settings Modules
+
+_Note: This functionality is unnecessary for the vast majority of users.
+It is far more convenient to simply rely on the default settings module
+and set the application environment variables described in the previous
+section._
+
+Settings modules are modules that implement the `dtl_settings`
+behaviour. This module defines one callback, `setting/0`. They are
+useful when automating tests that involve toggling DTL configuration.
+
+`dtl_app_config_settings`, the default settings module, simply proxies
+settings lookups to application env variable lookups. It's a very good
+idea for user-defined settings modules to defer to
+`dtl_app_config_settings` for settings that they do not define. Here is
+an example of a settings module that overrides the `template_dirs`
+setting:
+
+    -module(news_settings).
+    -behaviour(dtl_settings).
+
+    -export([setting/2]).
+
+    setting(template_dirs, _Default) ->
+        ["/tmp/templates"];
+    setting(Key, Default) ->
+        dtl_app_config_settings:setting(Key, Default).
+
+You can see another example with `dtl_ets_settings`, which is only used
+for DTL tests.
 
 
 ##4. Basic usage

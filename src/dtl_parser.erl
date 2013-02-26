@@ -56,7 +56,7 @@ parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
     Node = dtl_node:new_var(FilterExpr),
     parse_until(Parser, Tokens, Until, [Node|Nodes]);
 %% TODO: Clean up this ugly function ...
-parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens],
+parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|_Tokens],
         Until, Nodes) ->
     case split_token(Src) of
         [] -> {error, empty_block_tag};

@@ -46,7 +46,7 @@ load_template_source(Name) -> load_template_source(Name, []).
 -spec load_template_source(list(), [list()]) ->
     {ok, binary(), list()} | {error, not_found}.
 load_template_source(Name, _Dirs) ->
-    load_template_source(Name, dtl_settings:apps(), []).
+    load_template_source(Name, dtl:setting(apps), []).
 load_template_source(Name, [App|Apps], Tried) ->
     case code:priv_dir(App) of
         %% Django reports this error, not sure if we should too ...

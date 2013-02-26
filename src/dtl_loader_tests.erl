@@ -31,10 +31,7 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-%%
 %% Loader behaviour
-%%
-
 is_usable() -> true.
 
 load_template_source(_Name) ->
@@ -43,12 +40,9 @@ load_template_source(_Name) ->
 load_template_source(Name, _Dirs) ->
     load_template_source(Name).
 
-%%
 %% Tests
-%%
-
 setup() ->
-    application:set_env(dtl, template_loaders, [?MODULE]).
+    dtl_ets_settings:set(template_loaders, [?MODULE]).
 
 behaviour_test_() ->
     {setup, fun setup/0,

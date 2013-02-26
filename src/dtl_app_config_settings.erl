@@ -20,17 +20,15 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tests for the filesystem loader.
--module(dtl_fs_loader_tests).
+%% @doc Base settings module. Simply proxies to application env vars.
+-module(dtl_app_config_settings).
+-behaviour(dtl_settings).
 
--include_lib("eunit/include/eunit.hrl").
+-export([setting/2]).
 
-setup() ->
-    dtl_ets_settings:set(template_loaders, [dtl_fs_loader]).
-
-file_load_test_() ->
-    {setup, fun setup/0,
-     [?_assertEqual({error, not_found}, dtl_loader:find_template("../missing.html")),
-      ?_assertEqual({error, not_found}, dtl_loader:find_template("missing.html")),
-      ?_assertEqual({ok, <<>>}, dtl_loader:find_template("empty.html")),
-      ?_assertEqual({ok, <<"<html>\n</html>\n">>}, dtl_loader:find_template("index.html"))]}.
+-spec setting(atom(), term()) -> term().
+setting(Key, Default) ->
+    case application:get_env(dtl, Key) of
+        {ok, Val} -> Val;
+        undefined -> Default
+    end.

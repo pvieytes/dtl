@@ -27,6 +27,7 @@
     {applications, [kernel, stdlib]},
     {modules, []},
     {env, [{apps, []},
+           {settings_module, dtl_app_config_settings},
            {context_processors, []},
            {debug, false},
            {template_dirs, ["priv/templates"]},

@@ -92,7 +92,7 @@ find_template(Name) -> find_template(Name, []).
 -spec find_template(list(), [list()]) ->
     {ok, binary()} | {error, not_found | no_loaders | atom()}.
 find_template(Name, Dirs) ->
-    case dtl_settings:template_loaders() of
+    case dtl:setting(template_loaders) of
         [] -> {error, no_loaders};
         Loaders -> try_loaders(Name, Dirs, Loaders)
     end.

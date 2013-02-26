@@ -28,7 +28,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
-    application:set_env(dtl, debug, false).
+    dtl_ets_settings:set(debug, false).
 
 text_token_test_() ->
     {setup, fun setup/0,

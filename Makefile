@@ -36,7 +36,9 @@
 #     CT_FLAGS: Extra options for Common Test.
 
 PROGRAM = dtl
-PREREQ_BEAMS = ebin/dtl_library.beam ebin/dtl_loader.beam
+PREREQ_BEAMS = ebin/dtl_library.beam \
+	       ebin/dtl_loader.beam \
+	       ebin/dtl_settings.beam
 
 include erl.mk
 

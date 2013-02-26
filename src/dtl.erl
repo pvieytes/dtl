@@ -24,7 +24,9 @@
 -module(dtl).
 
 -export([render/1,
-         render/2]).
+         render/2,
+         setting/1,
+         setting/2]).
 
 -include("dtl.hrl").
 
@@ -44,3 +46,12 @@ render(Name, Ctx) ->
     {ok, Tpl} = dtl_loader:get_template(Name),
     {ok, Out, _Ctx2} = dtl_template:render(Tpl, Ctx),
     {ok, Out}.
+
+-spec setting(atom()) -> term().
+setting(Name) ->
+    setting(Name, undefined).
+
+-spec setting(atom(), term()) -> term().
+setting(Name, Default) ->
+    {ok, Mod} = application:get_env(dtl, settings_module),
+    Mod:setting(Name, Default).

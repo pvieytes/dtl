@@ -51,7 +51,7 @@ render(#dtl_tpl{nodelist = NodeList},
 %% @doc Compile a string to a nodelist.
 -spec compile_string(binary()) -> dtl_nodelist().
 compile_string(Str) ->
-    {LexerMod, ParserMod} = get_compiler(dtl_settings:debug()),
+    {LexerMod, ParserMod} = get_compiler(dtl:setting(debug)),
     Tokens = LexerMod:tokenize(Str),
     Parser = ParserMod:new(Tokens),
     {ok, NodeList, _Parser2} = ParserMod:parse(Parser),

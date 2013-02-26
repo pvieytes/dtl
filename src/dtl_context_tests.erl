@@ -47,9 +47,10 @@ base_context_test_() ->
      ?_assertEqual(2, dtl_context:fetch(Ctx4, b))].
 
 context_processor_test_() ->
-    application:set_env(dtl, context_processors,
-                        [{dtl_context_tests, example_processor},
-                         {dtl_context_tests, example_processor2}]),
+    dtl_ets_settings:set(context_processors, [
+        {dtl_context_tests, example_processor},
+        {dtl_context_tests, example_processor2}
+    ]),
     Ctx = dtl_context:new([{z, 9}]),
     [?_assertEqual(20, dtl_context:fetch(Ctx, x)),
      ?_assertEqual(8, dtl_context:fetch(Ctx, b)),

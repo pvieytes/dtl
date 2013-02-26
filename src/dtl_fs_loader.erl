@@ -40,7 +40,7 @@ is_usable() -> true.
     {ok, binary(), list()}
       | {error, no_template_dirs | not_found}.
 load_template_source(Name) ->
-    load_template_source(Name, dtl_settings:template_dirs()).
+    load_template_source(Name, dtl:setting(template_dirs)).
 
 %% @doc Searches the specified directories for the named template
 %%      (rather than the application's configured directory list). If
@@ -51,7 +51,7 @@ load_template_source(Name) ->
     {ok, binary(), list()} 
       | {error, no_template_dirs | not_found}.
 load_template_source(Name, []) ->
-    load_template_source(Name, dtl_settings:template_dirs(), []);
+    load_template_source(Name, dtl:setting(template_dirs));
 load_template_source(Name, Dirs) ->
     load_template_source(Name, Dirs, []).
 load_template_source(Name, [Dir|Dirs], Tried) ->

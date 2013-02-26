@@ -60,7 +60,7 @@ new_base() -> #dtl_ctx{}.
 process_all(BaseCtx) ->
     lists:foldl(fun ({M, F}, Ctx) ->
         update(Ctx, M:F())
-    end, BaseCtx, dtl_settings:context_processors()).
+    end, BaseCtx, dtl:setting(context_processors)).
 
 %% @doc Pushes a new dict on the stack.
 -spec push(dtl_context()) -> dtl_context().
