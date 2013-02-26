@@ -115,4 +115,4 @@ dialyze:
 clean-pre:
 ct-pre:
 
-.PHONY: clean clean-pre ct-clean doc-clean doc check ct ct-pre
+.PHONY: clean clean-pre ct-clean doc-clean check ct ct-pre
