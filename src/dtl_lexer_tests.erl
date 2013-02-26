@@ -30,22 +30,34 @@
 setup() ->
     dtl_ets_settings:set(debug, false).
 
+teardown(_) ->
+    dtl_ets_settings:clear().
+
 text_token_test_() ->
-    {setup, fun setup/0,
-     [?_assertEqual([{?TOKEN_TEXT, <<"Hello">>}], dtl_lexer:tokenize(<<"Hello">>))]}.
+    {setup, fun setup/0, fun teardown/1,
+     fun () ->
+         Token = dtl_lexer:tokenize(<<"Hello">>),
+         [?_assertEqual([{?TOKEN_TEXT, <<"Hello">>}], Token)]
+     end}.
 
 block_tag_and_text_test_() ->
-    {setup, fun setup/0,
-     [?_assertEqual([{?TOKEN_TEXT, <<" ">>},
-                     {?TOKEN_BLOCK, <<"block oink">>},
-                     {?TOKEN_TEXT, <<" Content ">>},
-                     {?TOKEN_BLOCK, <<"endblock">>},
-                     {?TOKEN_TEXT, <<" ">>}],
-                    dtl_lexer:tokenize(" {% block oink %} Content {% endblock %} "))]}.
+    {setup, fun setup/0, fun teardown/1,
+     fun () ->
+         Token = dtl_lexer:tokenize(" {% block oink %} Content {% endblock %} "),
+         [?_assertEqual([{?TOKEN_TEXT, <<" ">>},
+                         {?TOKEN_BLOCK, <<"block oink">>},
+                         {?TOKEN_TEXT, <<" Content ">>},
+                         {?TOKEN_BLOCK, <<"endblock">>},
+                         {?TOKEN_TEXT, <<" ">>}],
+                        Token)]
+     end}.
 
 verbatim_test_() ->
-    {setup, fun setup/0,
-     [?_assertEqual([{?TOKEN_BLOCK, <<"verbatim">>},
-                     {?TOKEN_TEXT, <<"{% Oink %}">>},
-                     {?TOKEN_BLOCK, <<"endverbatim">>}],
-                    dtl_lexer:tokenize("{% verbatim %}{% Oink %}{% endverbatim %}"))]}.
+    {setup, fun setup/0, fun teardown/1,
+     fun () ->
+         Tokens = dtl_lexer:tokenize("{% verbatim %}{% Oink %}{% endverbatim %}"),
+         [?_assertEqual([{?TOKEN_BLOCK, <<"verbatim">>},
+                         {?TOKEN_TEXT, <<"{% Oink %}">>},
+                         {?TOKEN_BLOCK, <<"endverbatim">>}],
+                        Tokens)]
+     end}.

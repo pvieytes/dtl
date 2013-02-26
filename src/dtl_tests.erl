@@ -26,9 +26,11 @@
 -include_lib("eunit/include/eunit.hrl").
 
 setup() ->
-    dtl_ets_settings:set(apps, [test_app]),
-    dtl_ets_settings:set(template_loaders, [dtl_fs_loader, dtl_apps_loader]).
+    dtl_ets_settings:set(apps, [test_app]).
+
+teardown(_) ->
+    dtl_ets_settings:clear().
 
 render_test_() ->
-    {setup, fun setup/0,
+    {setup, fun setup/0, fun teardown/1,
      [?_assertEqual({ok, <<"Test\n">>}, dtl:render("test.html"))]}.

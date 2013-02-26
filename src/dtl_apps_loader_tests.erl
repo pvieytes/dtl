@@ -29,8 +29,11 @@ setup() ->
     dtl_ets_settings:set(apps, [test_app]),
     dtl_ets_settings:set(template_loaders, [dtl_apps_loader]).
 
+teardown(_) ->
+    dtl_ets_settings:clear().
+
 app_file_load_test_() ->
-    {setup, fun setup/0,
+    {setup, fun setup/0, fun teardown/1,
      [?_assertEqual({ok, <<>>}, dtl_loader:find_template("blank.html")),
       ?_assertEqual({ok, <<"Test\n">>}, dtl_loader:find_template("test.html")),
       ?_assertEqual({error, not_found}, dtl_loader:find_template("none.html")),

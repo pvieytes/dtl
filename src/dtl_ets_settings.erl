@@ -24,19 +24,22 @@
 -module(dtl_ets_settings).
 -behaviour(dtl_settings).
 
--export([init/0,
+-export([clear/0,
+         init/0,
          set/2,
          setting/2]).
 
 -define(TABLE, dtl_ets_settings).
 
--spec init() -> atom().
+-spec init() -> ok.
 init() ->
-    ets:new(?TABLE, [named_table, public]).
+    ets:new(?TABLE, [named_table, public]),
+    ok.
 
--spec set(atom(), term()) -> boolean().
+-spec set(atom(), term()) -> ok.
 set(Key, Val) ->
-    ets:insert(?TABLE, {Key, Val}).
+    ets:insert(?TABLE, {Key, Val}),
+    ok.
 
 -spec setting(atom(), term()) -> term().
 setting(Key, Default) ->
@@ -44,3 +47,8 @@ setting(Key, Default) ->
         [{Key, Val}] -> Val;
         [] -> dtl_app_config_settings:setting(Key, Default)
     end.
+
+-spec clear() -> ok.
+clear() ->
+    ets:delete_all_objects(?TABLE),
+    ok.

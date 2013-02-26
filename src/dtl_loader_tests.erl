@@ -44,6 +44,9 @@ load_template_source(Name, _Dirs) ->
 setup() ->
     dtl_ets_settings:set(template_loaders, [?MODULE]).
 
+teardown(_) ->
+    dtl_ets_settings:clear().
+
 behaviour_test_() ->
-    {setup, fun setup/0,
+    {setup, fun setup/0, fun teardown/1,
      [?_assertEqual({ok, <<"Test">>}, dtl_loader:find_template(""))]}.

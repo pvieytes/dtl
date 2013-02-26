@@ -37,6 +37,6 @@ eunit(Config) ->
     TplDir = filename:join(Data, "templates"),
     ok = application:start(dtl),
     application:set_env(dtl, settings_module, dtl_ets_settings),
-    dtl_ets_settings:set(template_dirs, [TplDir]),
+    application:set_env(dtl, template_dirs, [TplDir]),
     ok = eunit:test({application, dtl}),
     ok = application:stop(dtl).
