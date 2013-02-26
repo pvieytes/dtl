@@ -1,6 +1,7 @@
 .eunit
 ebin
 deps
+doc
 logs
 test/*.beam
 .dtl.plt

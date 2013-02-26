@@ -31,26 +31,34 @@
 
 -include("dtl.hrl").
 
--spec new_var(dtl_filter_expr()) -> dtl_node().
+-type tnode() :: #dtl_node{} | list() | binary().
+-type tnodelist() :: [tnode()].
+-export_type([tnode/0, tnodelist/0]).
+
+-spec new_var(dtl_filter:expr()) -> tnode().
 new_var(FilterExpr) ->
     #dtl_node{renderer = {?MODULE, render_var},
               state = FilterExpr}.
 
--spec render_var(dtl_node(), dtl_context()) -> binary().
+-spec render_var(tnode(), dtl_context:context()) ->
+    binary().
 render_var(_Node, _Ctx) -> <<>>.
 
 %% @doc Renders a list of nodes.
--spec render_list(dtl_nodelist(), dtl_context()) -> {ok, [binary()]}.
+-spec render_list(tnodelist(), dtl_context:context()) ->
+    {ok, [binary()]}.
 render_list(NodeList, Ctx) ->
     {ok, render_list(NodeList, Ctx, [])}.
 
--spec render_list(dtl_nodelist(), dtl_context(), [binary()]) -> [binary()].
+-spec render_list(tnodelist(), dtl_context:context(),
+        [binary()]) ->
+    [binary()].
 render_list([Node|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
 render_list([], _Ctx, Bits) -> lists:reverse(Bits).
 
 %% @doc Renders a single node.
--spec render(dtl_node(), dtl_context()) -> binary().
+-spec render(tnode(), dtl_context:context()) -> binary().
 render(Node = #dtl_node{renderer = {M, F}}, Ctx) ->
     M:F(Node, Ctx);
 render(Node = #dtl_node{renderer = Fun}, Ctx) ->

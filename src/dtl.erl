@@ -37,7 +37,7 @@ render(Name) -> render(Name, dtl_context:new()).
 %% @doc Creates and renders the template with the provided name.
 -spec render(list(), [{term(), term()}]) ->
                 {ok, binary()} | {error, atom()};
-            (list(), dtl_context()) ->
+            (list(), dtl_context:context()) ->
                 {ok, binary()} | {error, atom()}.
 render(Name, PList) when is_list(PList) ->
     render(Name, dtl_context:new(PList));

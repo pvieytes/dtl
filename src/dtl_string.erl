@@ -65,10 +65,6 @@ escape_re_char(C) when C < $0;
 escape_re_char(C) -> C.
 
 %% @doc Splits on spaces, except within quoted characters "" and ''.
-%%
-%%      Parts = smart_split(<<"A fish with a \"wish\" id=4 123&*^098)*(">>),
-%%      Parts = [<<"A">>, <<"fish">>, <<"with">>, <<"a">>,
-%%               <<"\"wish\"">>, <<"id=4">>, <<"123&*^098)*(">>].
 -spec smart_split(binary()) -> [binary()].
 smart_split(Subj) ->
     {ok, Re} = re:compile(?TOKEN_PART_MATCHER),

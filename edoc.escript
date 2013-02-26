@@ -1,3 +1,4 @@
+#!/usr/bin/env escript
 %% Copyright (c) 2013- Thomas Allen <thomas@oinksoft.com>
 %%
 %% Permission is hereby granted, free of charge, to any person obtaining
@@ -20,30 +21,11 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Records and types needed throughout the program.
-
-%% @doc Contexts. These maintain a stack of states pushed by different
-%%      parts of the program, so that updates to the context data
-%%      consist of pushing to the stack rather than destroying existing
-%%      data.
--record(dtl_ctx, {
-    stack = [] :: [dict()],
-    autoescape = true :: boolean(),
-    render_context :: dtl_context:context()
-}).
-
-%% @doc Templates, this program's core data type. These are the compiled
-%%      representation of string templates and all template rendering
-%%      occurs via an internal node list.
--record(dtl_tpl, {
-    nodelist = [] :: dtl_node:tnodelist()
-}).
-
-%% @doc Nodes, the building blocks of templates. Nodes themselves may
-%%      contain lists of other nodes, so template rendering is
-%%      recursive.
--record(dtl_node, {
-    nodelists = [] :: [dtl_node:tnodelist()],
-    renderer :: {atom(), atom()} | fun(),
-    state
-}).
+%% @doc EDoc generation script.
+main(_Args) ->
+    Files = lists:filter(fun (Filename) ->
+        string:str(Filename, "tests.erl") =:= 0
+    end, filelib:wildcard("src/*.erl")),
+    {ok, Cwd} = file:get_cwd(),
+    Docs = filename:join([Cwd, "doc"]),
+    edoc:files(Files, [{dir, Docs}]).

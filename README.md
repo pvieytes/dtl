@@ -389,13 +389,12 @@ Empty.
 
 ##12. Support/Getting Help
 
-Empty.
+Please report any bugs as issues at this github project.
 
 
 ##13. API Documentation
 
-API functions are all documented in the source code, formatted
-documentation is a work in progress.
+API documentation is regularly updated at https://oinksoft.com/static/doc/dtl
 
 
 ##14. Roadmap

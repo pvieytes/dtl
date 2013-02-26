@@ -23,12 +23,17 @@
 %% @doc Template tokenizing functions.
 -module(dtl_lexer).
 
-%% Not sure if I should provide a behavior so that this and the debug
-%% lexer are guaranteed to share an interface.
+-include("dtl_compiler.hrl").
+
+-type token_type() :: ?TOKEN_TEXT
+                    | ?TOKEN_VAR
+                    | ?TOKEN_BLOCK
+                    | ?TOKEN_COMMENT.
+-type token() :: {token_type(), binary()}.
 
 -export([tokenize/1]).
+-export_type([token/0, token_type/0]).
 
--include("dtl_compiler.hrl").
 
 %% Main constituents of the template string splitting regex. Groups of
 %% these start and end combinations are captured.
@@ -41,7 +46,7 @@
 
 %% @doc Traverses the provided template source code, generating a list
 %%      of tokens describing the basic structure.
--spec tokenize(binary()) -> [dtl_token()].
+-spec tokenize(binary()) -> [token()].
 tokenize(Src) ->
     Bits = re:split(Src, make_splitter()),
     %% Django strips out empty tokens here, we do that when creating the
@@ -62,7 +67,7 @@ make_splitter() ->
 %% defined, results in a list of the form [Tag, Text, Tag, Text, ...].
 %%
 %% Empty bit, discard it.
--spec tokenize_bits([binary()], [dtl_token()], boolean(), boolean()) -> [dtl_token()].
+-spec tokenize_bits([binary()], [token()], boolean(), boolean()) -> [token()].
 tokenize_bits([<<>>|Bits], Tokens, InTag, Verbatim) ->
     tokenize_bits(Bits, Tokens, not InTag, Verbatim);
 %% Non-empty bit, process it.
@@ -73,7 +78,7 @@ tokenize_bits([Bit|Bits], Tokens, InTag, Verbatim) ->
 tokenize_bits([], Tokens, _InTag, _Verbatim) -> lists:reverse(Tokens).
 
 %% Token factory.
--spec make_token(binary(), boolean(), boolean()) -> dtl_token().
+-spec make_token(binary(), boolean(), boolean()) -> token().
 %% Check for {% endverbatim %} if in {% verbatim %}.
 make_token(Src = <<?BLOCK_TAG_START, Rest/binary>>, true, true) ->
     Stripped = strip_token(Rest),

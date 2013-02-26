@@ -26,4 +26,7 @@
 
 -export([parse/1]).
 
+-type expr() :: {}.
+-export_type([expr/0]).
+
 parse(_Src) -> {}.

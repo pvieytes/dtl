@@ -66,7 +66,7 @@
 %% @doc Finds a template and compiles it, returning the compiled
 %%      representation.
 -spec get_template(list()) ->
-    dtl_template() | {error, not_found | atom()}.
+    dtl_template:template() | {error, not_found | atom()}.
 get_template(Name) ->
     case find_template(Name) of
         {ok, Source} -> {ok, dtl_template:new(Source)};
@@ -76,7 +76,7 @@ get_template(Name) ->
 %% @doc Returns the first of several requested templates that a loader
 %%      module finds, in its compiled representation.
 -spec select_template([list()]) ->
-    dtl_template() | {error, not_found | atom()}.
+    dtl_template:template() | {error, not_found | atom()}.
 select_template([Name|Names]) ->
     case get_template(Name) of
         {ok, Tpl} -> {ok, Tpl};

@@ -29,16 +29,19 @@
 
 -include("dtl.hrl").
 
+-type template() :: #dtl_tpl{}.
+-export_type([template/0]).
+
 %% @doc Compiles the provided template source, returning the compiled
 %%      representation, suitable for use with other functions in this
 %%      module.
--spec new(binary()) -> dtl_template().
+-spec new(binary()) -> template().
 new(Str) ->
     #dtl_tpl{nodelist = compile_string(Str)}.
 
 %% @doc Renders the provided template with the context (stub).
--spec render(dtl_template(), dtl_context()) ->
-    {ok, binary(), dtl_context()} | {error, atom()}.
+-spec render(template(), dtl_context:context()) ->
+    {ok, binary(), dtl_context:context()} | {error, atom()}.
 render(#dtl_tpl{nodelist = NodeList},
        Ctx = #dtl_ctx{render_context = RenderCtx}) ->
     %% Push onto the render context: This is so that {% assign %} and
@@ -49,7 +52,7 @@ render(#dtl_tpl{nodelist = NodeList},
     {ok, iolist_to_binary(OutList), Ctx}.
 
 %% @doc Compile a string to a nodelist.
--spec compile_string(binary()) -> dtl_nodelist().
+-spec compile_string(binary()) -> dtl_node:tnodelist().
 compile_string(Str) ->
     {LexerMod, ParserMod} = get_compiler(dtl:setting(debug)),
     Tokens = LexerMod:tokenize(Str),

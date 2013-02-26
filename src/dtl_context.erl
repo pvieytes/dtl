@@ -42,18 +42,22 @@
 
 -include("dtl.hrl").
 
+-type context() :: #dtl_ctx{}.
+-export_type([context/0]).
+
 %% @doc Creates a new template context with no data.
--spec new_base() -> dtl_context().
+-spec new() -> context().
 new() -> new([]).
 
 %% @doc Creates a new template context with the provided data.
--spec new(list()) -> dtl_context().
+-spec new(list()) -> context().
 new(PList) ->
     Ctx = new_base(),
     Ctx2 = Ctx#dtl_ctx{render_context = new_base()},
     update(process_all(Ctx2), PList).
 
 %% Internal function to return a common context base.
+-spec new_base() -> context().
 new_base() -> #dtl_ctx{}.
 
 %% TODO: Support some initial state (Django provides an HTTP request
@@ -64,12 +68,12 @@ process_all(BaseCtx) ->
     end, BaseCtx, dtl:setting(context_processors)).
 
 %% @doc Pushes a new dict on the stack.
--spec push(dtl_context()) -> dtl_context().
+-spec push(context()) -> context().
 push(Ctx = #dtl_ctx{stack = Stack}) ->
     Ctx#dtl_ctx{stack = [dict:new()|Stack]}.
 
 %% @doc Pops a dict off of the stack.
--spec pop(dtl_context()) -> dtl_context().
+-spec pop(context()) -> context().
 pop(Ctx = #dtl_ctx{stack = [_|Stack]}) ->
     Ctx#dtl_ctx{stack = Stack};
 %% Django raises an exception when popping an empty stack. Not sure if
@@ -77,14 +81,14 @@ pop(Ctx = #dtl_ctx{stack = [_|Stack]}) ->
 pop(Ctx = #dtl_ctx{stack = []}) -> Ctx.
 
 %% @doc Sets a value on the stack.
--spec set(dtl_context(), term(), term()) -> dtl_context().
+-spec set(context(), term(), term()) -> context().
 set(Ctx = #dtl_ctx{stack = [Head|Stack]}, K, V) ->
     Ctx#dtl_ctx{stack = [dict:store(K, V, Head)|Stack]};
 set(Ctx = #dtl_ctx{stack = []}, K, V) ->
     set(push(Ctx), K, V).
 
 %% @doc Set many values on a context at once.
--spec update(dtl_context(), [{term(), term()}]) -> dtl_context().
+-spec update(context(), [{term(), term()}]) -> context().
 update(Ctx, PList) ->
     Ctx2 = push(Ctx),
     lists:foldl(fun ({K, V}, Ctx3) ->
@@ -92,7 +96,7 @@ update(Ctx, PList) ->
     end, Ctx2, PList).
 
 %% @doc Looks up a value on all stacks, in top-to-bottom order.
--spec fetch(dtl_context(), term()) -> {ok, term()} | undefined.
+-spec fetch(context(), term()) -> {ok, term()} | undefined.
 fetch(#dtl_ctx{stack = []}, _K) -> undefined;
 fetch(#dtl_ctx{stack = Stack}, K) -> fetch_stack(Stack, K).
 
@@ -108,7 +112,7 @@ fetch_stack([], _K) -> undefined.
 
 %% @doc Looks up a value on all stacks, in top-to-bottom order,
 %%      returning the default value if none is found.
--spec fetch(dtl_context(), term(), term()) -> term().
+-spec fetch(context(), term(), term()) -> term().
 fetch(Ctx, K, Def) ->
     case fetch(Ctx, K) of
         undefined -> Def;
@@ -121,13 +125,13 @@ fetch(Ctx, K, Def) ->
 %%      
 %%      Returns `undefined' if the key is not defined on the render
 %%      context.
--spec render_fetch(dtl_context(), term()) -> term() | undefined.
+-spec render_fetch(context(), term()) -> term() | undefined.
 render_fetch(#dtl_ctx{stack = [Head|_Stack]}, K) ->
     fetch_stack([Head], K).
 
 %% @doc Same as render_fetch/2, but returns the default value if the key
 %%      is not defined on the context.
--spec render_fetch(dtl_context(), term(), term()) -> term().
+-spec render_fetch(context(), term(), term()) -> term().
 render_fetch(Ctx, K, Def) ->
     case render_fetch(Ctx, K) of
         undefined -> Def;

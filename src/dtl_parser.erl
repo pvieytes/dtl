@@ -26,28 +26,48 @@
 -include("dtl.hrl").
 -include("dtl_compiler.hrl").
 
+-type parser() :: #dtl_parser{}.
+
 -export([new/1,
          parse/1,
          parse/2,
          split_token/1]).
+-export_type([parser/0]).
 
--spec new([dtl_token()]) -> dtl_parser().
+
+%% @doc Creates a new, empty parser.
+-spec new([dtl_lexer:token()]) -> parser().
 new(Tokens) ->
     #dtl_parser{tokens = Tokens,
                 tags = [],
                 filters = []}.
 
--spec parse(dtl_parser()) ->
-    {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
+%% @doc Parses all tokens within the provided parser, returning the
+%%      resulting nodelist. See parse/2 for errors.
+-spec parse(parser()) ->
+    {ok, dtl_node:tnodelist(), parser()} | {error, atom()}.
 parse(Parse) -> parse(Parse, []).
 
--spec parse(dtl_parser(), [atom()]) ->
-    {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
+%% @doc Parses all tokens within the provided parser until a block tag
+%%      token named in the second parameter is encountered.
+%%
+%%      Errors:
+%%
+%%      unclosed_block_tag: If the second parameter is non-empty and
+%%          none of the candidate block tags are ever encountered.
+%%
+%%      empty_block_tag: If the parser encounters a block tag with no
+%%          contents.
+%%
+%%      unknown_tag: If an unregistered block tag is encountered.
+-spec parse(parser(), [atom()]) ->
+    {ok, dtl_node:tnodelist(), parser()} | {error, atom()}.
 parse(Parser = #dtl_parser{tokens = Tokens}, Until) ->
     parse_until(Parser, Tokens, Until, []).
 
--spec parse_until(dtl_parser(), [dtl_token()], [atom()], dtl_nodelist()) ->
-    {ok, dtl_nodelist(), dtl_parser()} | {error, atom()}.
+-spec parse_until(parser(), [dtl_lexer:token()], [atom()],
+        dtl_node:tnodelist()) ->
+    {ok, dtl_node:tnodelist(), parser()} | {error, atom()}.
 parse_until(Parser, [{?TOKEN_TEXT, Src}|Tokens], Until, Nodes) ->
     parse_until(Parser, Tokens, Until, [Src|Nodes]);
 parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
@@ -65,7 +85,7 @@ parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|_Tokens],
                 error -> {error, unknown_tag};
                 Cmd ->
                     case lists:member(Cmd, Until) of
-                        %% Is in the "parse until" list, 
+                        %% Is in the "parse until" list,
                         true ->
                             {ok, Nodes,
                              Parser#dtl_parser{tokens = AllTokens}};
@@ -84,6 +104,8 @@ parse_until(Parser, [], [], Nodes) ->
 parse_until(_Parser, [], _Until, _Nodes) ->
     {error, unclosed_block_tag}.
 
+%% @doc Splits a block tag template token into its constituent parts,
+%%      splitting on all whitespace not contained in a "" or '' pair.
 split_token(Src) ->
     %% TODO: Add support for _("Text") like in Django.
     dtl_string:smart_split(Src).

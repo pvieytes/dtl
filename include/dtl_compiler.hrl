@@ -44,14 +44,7 @@
 -define(TRANSLATOR_COMMENT_MARK, "Translators").
 
 -record(dtl_parser, {
-    tokens :: [dtl_token()],
+    tokens :: [dtl_lexer:token()],
     tags,
     filters
 }).
-
--type dtl_parser() :: #dtl_parser{}.
--type dtl_token_type() :: ?TOKEN_TEXT
-                       | ?TOKEN_VAR
-                       | ?TOKEN_BLOCK
-                       | ?TOKEN_COMMENT.
--type dtl_token() :: {dtl_token_type(), binary()}.

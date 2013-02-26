@@ -44,6 +44,7 @@
 # 	  CT_SUITES: A list of test suites that Common Test should run.
 
 # Options
+ERL ?= erl
 ERLC ?= erlc
 EFLAGS ?=
 DIALYZER ?= dialyzer
@@ -53,24 +54,33 @@ CT_RUN ?= ct_run
 SHELL := bash
 
 # Files that require compilation.
-BEAMS := $(shell find src -name '*.erl' \
+BEAMS = $(shell find src -name '*.erl' \
 	| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
 
 # Raw distributed module list.
-MAIN_ERLS := $(shell find src -name '*.erl' -not -name '*tests.erl')
-MODS := $(shell find src -name '*.erl' -not -name '*tests.erl' \
+MAIN_ERLS = $(shell find src -name '*.erl' -not -name '*tests.erl')
+MODS = $(shell find src -name '*.erl' -not -name '*tests.erl' \
 	-exec basename {} .erl \;)
 
 # Distributed module list, as an erlang term.
 #
 # Note that this uses an unsafe array expansion. Don't use it files
 # could contain spaces (this is never the case for Erlang modules).
-MODLIST := $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
+MODLIST = $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
 # These are separate because eventually we want to use the -j flag (job
 # count limit) in the main BEAMS compilation.
 program: ebin/$(PROGRAM).app $(PREREQ_BEAMS)
 	@$(MAKE) $(BEAMS)
+
+clean: clean-pre ct-clean doc-clean
+	rm -rf ebin
+
+ct-clean:
+	rm -rf logs
+
+doc-clean:
+	rm -rf doc
 
 ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
 	mkdir -p ebin
@@ -81,18 +91,17 @@ ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
 ebin/%.beam: src/%.erl
 	$(ERLC) $(EFLAGS) -o ebin -pa ebin -I include $?
 
-clean: ct-clean clean-pre
-	rm -rf ebin
-
-ct-clean:
-	rm -rf logs
-
 check: ct
 
 ct: ct-clean program ct-pre
 	mkdir -p logs
 	$(CT_RUN) $(EFLAGS) $(CT_FLAGS) -pa ebin \
 		-I include -dir test -logdir logs -suite $(CT_SUITES)
+
+doc: $(MAIN_ERLS)
+	mkdir -p doc
+	touch doc
+	./edoc.escript
 
 plt:
 	$(DIALYZER) --build_plt --output_plt .$(PROGRAM).plt \
@@ -106,4 +115,4 @@ dialyze:
 clean-pre:
 ct-pre:
 
-.PHONY: clean clean-pre ct-clean check ct ct-pre
+.PHONY: clean clean-pre ct-clean doc-clean doc check ct ct-pre
