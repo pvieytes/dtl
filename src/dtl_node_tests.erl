@@ -25,53 +25,38 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
-setup() ->
-    dtl_ets_settings:set(template_loaders, [dtl_fs_loader]).
 
-teardown(_) ->
-    dtl_ets_settings:clear().
-
+%% Test that basic text nodes are output correctly.
 text_node_test_() ->
     Ctx = dtl_context:new(),
-    {setup, fun setup/0, fun teardown/1,
-     [?_assertEqual(<<"A">>, dtl_node:render(<<"A">>, Ctx)),
-      ?_assertEqual(<<"B">>, dtl_node:render("B", Ctx))]}.
+    [?_assertEqual(<<"A">>, dtl_node:render(<<"A">>, Ctx)),
+     ?_assertEqual(<<"B">>, dtl_node:render("B", Ctx))].
 
+%% Test that a nodelist renders correctly.
 list_render_test_() ->
     Ctx = dtl_context:new(),
-    {setup, fun setup/0, fun teardown/1,
-     [?_assertEqual({ok, [<<"a">>, <<"b">>, <<"c">>]},
-                          dtl_node:render_list(["a", "b", "c"], Ctx)),
-      ?_assertEqual({ok, []}, dtl_node:render_list([], Ctx))]}.
+    [?_assertEqual({ok, [<<"a">>, <<"b">>, <<"c">>]},
+                         dtl_node:render_list(["a", "b", "c"], Ctx)),
+     ?_assertEqual({ok, []}, dtl_node:render_list([], Ctx))].
 
+%% Test that all sorts of variables and constants are read and
+%% substituted properly in renderered templates.
 variable_node_test_() ->
+    Tests = [{<<"Orange">>, <<"{{ color }}">>},
+             {<<"Piglets: 4">>, <<"Piglets: {{ piglets }}">>},
+             {<<"{1,2,3}">>, <<"{{ an_atom }}">>},
+             {<<"[1,2,3] = L">>, <<"{{ a_list }} = L">>},
+             {<<"1">>, <<"{{ nested.a }}">>},
+             {<<"Oink">>, <<"{{ \"Oink\" }}">>},
+             {<<"2">>, <<"{{ 2 }}">>},
+             {<<"8.8">>, <<"{{ 8.8 }}">>},
+             {<<"-1.9">>, <<"{{ -1.9 }}">>},
+             {<<"-4">>, <<"{{ -4 }}">>},
+             {<<"1.89e5">>, <<"{{ 1.89e5 }}">>},
+             {<<"2">>, <<"{{ 2 }}">>}],
     Ctx = dtl_context:new([{color, <<"Orange">>},
                            {piglets, 4},
                            {nested, [{ a, 1 }]},
                            {an_atom, {1, 2, 3}},
                            {a_list, [1, 2, 3]}]),
-    {setup, fun setup/0, fun teardown/1,
-     compare_templates([{<<"Orange">>, <<"{{ color }}">>},
-                        {<<"Piglets: 4">>, <<"Piglets: {{ piglets }}">>},
-                        {<<"{1,2,3}">>, <<"{{ an_atom }}">>},
-                        {<<"[1,2,3] = L">>, <<"{{ a_list }} = L">>},
-                        {<<"1">>, <<"{{ nested.a }}">>},
-                        {<<"Oink">>, <<"{{ \"Oink\" }}">>},
-                        {<<"2">>, <<"{{ 2 }}">>},
-                        {<<"8.8">>, <<"{{ 8.8 }}">>},
-                        {<<"-1.9">>, <<"{{ -1.9 }}">>},
-                        {<<"-4">>, <<"{{ -4 }}">>},
-                        {<<"1.89e5">>, <<"{{ 1.89e5 }}">>},
-                        {<<"2">>, <<"{{ 2 }}">>}], Ctx)}.
-
-basic_filter_test_() ->
-    Ctx = dtl_context:new(),
-    {setup, fun setup/0, fun teardown/1,
-     compare_templates([{<<"PIG">>, <<"{{ \"pig\"|upper }}">>},
-                        {<<" 1c2o3w ">>, <<" {{ \"1C2O3w\" | lower }} ">>},
-                        {<<"PIG">>, <<"{{ \"PIG\"|lower|upper }}">>}], Ctx)}.
-
-compare_templates(Tests, Ctx) ->
-     [?_assertEqual({ok, Out, Ctx},
-                    dtl_template:render(dtl_template:new(In), Ctx))
-        || {Out, In} <- Tests].
+    dtl_tests:compare_templates(Tests, Ctx).

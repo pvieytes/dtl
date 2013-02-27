@@ -20,30 +20,15 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc System tests of high-level DTL functions.
--module(dtl_tests).
-
--export([compare_templates/2]).
+%% @doc Test variable filter mechanism.
+-module(dtl_filter_tests).
 
 -include_lib("eunit/include/eunit.hrl").
 
-setup() ->
-    dtl_ets_settings:set(apps, [test_app]).
-
-teardown(_) ->
-    dtl_ets_settings:clear().
-
-render_test_() ->
-    {setup, fun setup/0, fun teardown/1,
-     [?_assertEqual({ok, <<"Test\n">>}, dtl:render("test.html"))]}.
-
-%%
-%% Test utilities.
-%%
-
-%% Convenience function to test template source compilation and
-%% rendering. Provide expected template source, output, and context.
-compare_templates(Tests, Ctx) ->
-     [?_assertEqual({ok, Out, Ctx},
-                    dtl_template:render(dtl_template:new(In), Ctx))
-        || {Out, In} <- Tests].
+%% Test that filters work properly (depends on `dtl_library_tests' to
+%% be sure that we can load the test library).
+basic_filter_test_() ->
+    Tests = [{<<"PIG">>, <<"{{ \"pig\"|upper }}">>},
+             {<<" 1c2o3w ">>, <<" {{ \"1C2O3w\" | lower }} ">>},
+             {<<"PIG">>, <<"{{ \"PIG\"|lower|upper }}">>}],
+    dtl_tests:compare_templates(Tests, dtl_context:new()).
