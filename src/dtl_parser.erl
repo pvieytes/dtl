@@ -113,9 +113,12 @@ run_command(_Parser, _Cmd, _Token) ->
     %% Stub, pending library functions.
     ok.
 
--spec find_filter(parser(), atom()) -> {atom(), atom()} | error.
+-spec find_filter(parser(), binary()) -> {atom(), atom()} | error.
 find_filter(#dtl_parser{filters = Filters}, Name) ->
-    case lists:keysearch(Name, 1, Filters) of
-        {value, {Name, Spec}} -> Spec;
-        false -> error
+    case dtl_string:safe_list_to_atom(binary_to_list(Name)) of
+        error -> error;
+        A -> case lists:keysearch(A, 1, Filters) of
+            {value, {A, Spec}} -> Spec;
+            false -> error
+        end
     end.

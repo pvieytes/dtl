@@ -75,7 +75,7 @@ render_var(#dtl_node{state = FilterExpr}, Ctx) ->
     var_to_binary(dtl_filter:resolve_expr(FilterExpr, Ctx)).
 
 -spec var_to_binary(term()) -> binary().
-var_to_binary(T) when is_binary(T) -> T;
 %% This behavior may be configurable.
 var_to_binary(undefined) -> <<>>;
-var_to_binary(T) -> io_lib:format("~w", [T]).
+var_to_binary(T) when is_binary(T) -> T;
+var_to_binary(T) -> list_to_binary(io_lib:format("~w", [T])).
