@@ -399,8 +399,6 @@ API documentation is regularly updated at https://oinksoft.com/doc/dtl/
 
 ##14. Roadmap
 
-* Library management.
-* Base Django tags and filters.
-* Tag interfaces.
-* Filter interfaces.
-* Debug lexer and parser.
+* Default tags and filters.
+* Debug lexer and parser, better error handling.
+* I18n support.
