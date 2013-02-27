@@ -98,12 +98,16 @@ parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|_Tokens],
                             {ok, Nodes,
                              Parser#dtl_parser{tokens = AllTokens}};
                         false ->
-                            {Node, Parser2} = run_command(Parser, Cmd, Token),
-                            %% Start over with tokens because the tag
-                            %% function may have modified them.
-                            parse_until(Parser2,
-                                        Parser2#dtl_parser.tokens,
-                                        Until, [Node|Nodes])
+                            case run_command(Parser, Cmd, Token) of
+                                {ok, Node, Parser2} ->
+                                    parse_until(Parser2,
+                                                Parser2#dtl_parser.tokens,
+                                                Until, [Node|Nodes]);
+                                error ->
+                                    parse_until(Parser,
+                                                Parser#dtl_parser.tokens,
+                                                Until, Nodes)
+                            end
                     end
             end
     end;
@@ -114,12 +118,32 @@ parse_until(_Parser, [], _Until, _Nodes) ->
 
 %% @doc Splits a block tag template token into its constituent parts,
 %%      splitting on all whitespace not contained in a "" pair.
--spec split_token(binary()) -> binary().
+-spec split_token(binary()) -> [binary()].
 split_token(Src) ->
     dtl_string:smart_split(Src).
 
-run_command(_Parser, _Cmd, _Token) ->
-    %% Stub, pending library functions.
+%% TODO: Refactor this somewhat ... these probably should live in
+%% `dtl_tag' or `dtl_library'.
+
+-spec run_command(parser(), atom(), binary()) ->
+    {ok, dtl_node:tnode(), parser()} | error.
+run_command(Parser = #dtl_parser{tags = Tags}, Cmd, Token) ->
+    case dtl_string:safe_list_to_atom(binary_to_list(Cmd)) of
+        error -> error;
+        A -> case dict:find(A, Tags) of
+            error -> error;
+            {ok, Spec} -> run_command_tag(Spec, Parser, Token)
+        end
+    end.
+
+-spec run_command_tag(dtl_library:tag_spec(), parser(), dtl_lexer:token()) ->
+    {ok, dtl_node:tnode(), parser()}.
+run_command_tag({normal_tag, Mod, Fun}, Parser, Token) ->
+    {Node, Parser2} = Mod:Fun(Parser, Token),
+    {ok, Node, Parser2};
+run_command_tag({simple_tag, Mod, Fun}, Parser, Token) ->
+    ok;
+run_command_tag({inclusion_tag, Path, Mod, Fun}, Parser, Token) ->
     ok.
 
 -spec find_filter(parser(), binary()) -> {atom(), atom()} | error.

@@ -38,19 +38,23 @@
 -export_type([filter_spec/0,
               tag_spec/0]).
 
+%% @doc Update the filters dict with all filters registered to the
+%%      specified `dtl_library' callback module.
 -spec add_filters(atom(), dict()) -> dict().
 add_filters(Mod, Filters) ->
     lists:foldl(fun (Filter, Dict) ->
         dict:store(Filter, {Mod, Filter}, Dict)
     end, Filters, Mod:registered_filters()).
 
+%% @doc Update the tags dict with all tags registered to the specified
+%%      `dtl_library' callback module.
 -spec add_tags(atom(), dict()) -> dict().
 add_tags(Mod, Tags) ->
     lists:foldl(fun
-        (Tag = {simple_tag, Fun}, Dict) ->
-            dict:store(Fun, Tag, Dict);
-        (Tag = {inclusion_tag, _Path, Fun}, Dict) ->
-            dict:store(Fun, Tag, Dict);
+        ({simple_tag, Fun}, Dict) ->
+            dict:store(Fun, {simple_tag, Mod, Fun}, Dict);
+        ({inclusion_tag, Path, Fun}, Dict) ->
+            dict:store(Fun, {inclusion_tag, Path, Mod, Fun}, Dict);
         (Tag, Dict) ->
-            dict:store({normal_tag, Tag}, Tag, Dict)
+            dict:store(Tag, {normal_tag, Mod, Tag}, Dict)
     end, Tags, Mod:registered_tags()).
