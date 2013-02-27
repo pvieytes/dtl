@@ -39,7 +39,7 @@
 %% Double-quoted string.
 -define(CONSTANT_RE, "(?:\"[^\"\\\\]*(?:\\.[^\"\\\\]*)*\")").
 %% Numbers.
--define(NUM_RE, "[-+\.]?\\d[\\d\\.e]*").
+-define(NUM_RE, "[-+]?\\d[\\d\\.e]*").
 %% Variable names.
 -define(VAR_CHARS_RE, "\\w\\.").
 %% Filter separator.
@@ -98,7 +98,10 @@ process_matches([[_, _, Name, ConstArg, VarArg]|Matches], Var, Filters, Parser) 
             Args = case {ConstArg, VarArg} of
                 {<<>>, <<>>} -> [];
                 {Const, <<>>} -> [{false, process_string(Const)}];
-                {<<>>, Var2} -> [{true, process_var(Var2)}]
+                {<<>>, Var2} ->
+                    Var3 = process_var(Var2),
+                    Lookup = is_list(Var3),
+                    {Lookup, Var3}
             end,
             Filter = {FilterFun, Args},
             process_matches(Matches, Var, [Filter|Filters], Parser)
@@ -119,13 +122,21 @@ process_string(Bin) ->
 -spec process_term(binary()) -> term() | {error, invalid_constant}.
 process_term(Const) ->
     case erl_scan:string(binary_to_list(Const)) of
-        %% There should only be one term.
-        {ok, [{_Type, _Pos, Term}|_Terms], _Loc} -> Term;
+        {ok, [{_Type, _Pos, Term}], _Loc} -> Term;
+        %% For '-' and '+' operators:
+        {ok, [{Op, _Loc}, {_Type, _Pos, Term}], _Loc2} ->
+            erlang:Op(0, Term);
         {error, _, _Loc} -> {error, invalid_term}
     end.
 
-%% Parse a variable specification.
+%% Parse a variable specification. This function is designed to handle
+%% numbers as well. Django does it this way, but this approach probably
+%% isn't idea.
 -spec process_var(binary()) -> [list()].
+process_var(Num = <<C, _/binary>>) when C >= $0, C =< $9;
+                                        C =:= $+;
+                                        C =:= $- ->
+    process_term(Num);
 process_var(Var) ->
     string:tokens(binary_to_list(Var), ?VARIABLE_SEP).
 
