@@ -134,6 +134,12 @@ resolve_var(Lookup = [[_|_]|_], Ctx) -> resolve_lookup(Lookup, Ctx);
 resolve_var(T, _Ctx) -> T.
 
 -spec resolve_lookup([list()], term()) -> binary().
+%% This comes later but the function clause must be listed first.
+resolve_lookup([Head|Lookups], PList) when is_list(PList) ->
+    case dtl_string:safe_list_to_atom(Head) of
+        error -> undefined;
+        A -> resolve_lookup(Lookups, proplists:get_value(A, PList))
+    end;
 %% Start with the context ...
 resolve_lookup([Head|Lookups], Ctx) ->
     case dtl_string:safe_list_to_atom(Head) of
@@ -142,11 +148,6 @@ resolve_lookup([Head|Lookups], Ctx) ->
     end;
 %% Empty if undefined.
 resolve_lookup(_, undefined) -> undefined;
-resolve_lookup([Head|Lookups], PList) when is_list(PList) ->
-    case dtl_string:safe_list_to_atom(Head) of
-        error -> undefined;
-        A -> resolve_lookup(Lookups, proplists:get_value(A, PList))
-    end;
 resolve_lookup([], Val) -> Val.
 
 -spec filter_var(term(), [filter()], dtl_context:context()) -> binary().

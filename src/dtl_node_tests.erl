@@ -47,14 +47,17 @@ list_render_test_() ->
 variable_node_test_() ->
     Ctx = dtl_context:new([{color, <<"Orange">>},
                            {piglets, 4},
+                           {nested, [{ a, 1 }]},
                            {an_atom, {1, 2, 3}},
                            {a_list, [1, 2, 3]}]),
     Tpl = dtl_template:new(<<"{{ color }}">>),
     Tpl2 = dtl_template:new(<<"Piglets: {{ piglets }}">>),
     Tpl3 = dtl_template:new(<<"{{ an_atom }}">>),
     Tpl4 = dtl_template:new(<<"{{ a_list }} = L">>),
+    Tpl5 = dtl_template:new(<<"{{ nested.a }}">>),
     {setup, fun setup/0, fun teardown/1,
      [?_assertEqual({ok, <<"Orange">>, Ctx}, dtl_template:render(Tpl, Ctx)),
       ?_assertEqual({ok, <<"Piglets: 4">>, Ctx}, dtl_template:render(Tpl2, Ctx)),
       ?_assertEqual({ok, <<"{1,2,3}">>, Ctx}, dtl_template:render(Tpl3, Ctx)),
-      ?_assertEqual({ok, <<"[1,2,3] = L">>, Ctx}, dtl_template:render(Tpl4, Ctx))]}.
+      ?_assertEqual({ok, <<"[1,2,3] = L">>, Ctx}, dtl_template:render(Tpl4, Ctx)),
+      ?_assertEqual({ok, <<"1">>, Ctx}, dtl_template:render(Tpl5, Ctx))]}.
