@@ -108,7 +108,7 @@ process_matches([[_, _, Name, ConstArg, VarArg]|Matches], Var, Filters, Parser) 
     end;
 %% Finished.
 process_matches([], Var, Filters, _Parser) ->
-    {Var, Filters}.
+    {Var, lists:reverse(Filters)}.
 
 %% Process a double-quoted string.
 -spec process_string(binary()) -> binary().

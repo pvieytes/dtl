@@ -51,16 +51,27 @@ variable_node_test_() ->
                            {an_atom, {1, 2, 3}},
                            {a_list, [1, 2, 3]}]),
     {setup, fun setup/0, fun teardown/1,
-     [?_assertEqual({ok, Out, Ctx}, dtl_template:render(dtl_template:new(In), Ctx))
-        || {Out, In} <- [{<<"Orange">>, <<"{{ color }}">>},
-                         {<<"Piglets: 4">>, <<"Piglets: {{ piglets }}">>},
-                         {<<"{1,2,3}">>, <<"{{ an_atom }}">>},
-                         {<<"[1,2,3] = L">>, <<"{{ a_list }} = L">>},
-                         {<<"1">>, <<"{{ nested.a }}">>},
-                         {<<"Oink">>, <<"{{ \"Oink\" }}">>},
-                         {<<"2">>, <<"{{ 2 }}">>},
-                         {<<"8.8">>, <<"{{ 8.8 }}">>},
-                         {<<"-1.9">>, <<"{{ -1.9 }}">>},
-                         {<<"-4">>, <<"{{ -4 }}">>},
-                         {<<"1.89e5">>, <<"{{ 1.89e5 }}">>},
-                         {<<"2">>, <<"{{ 2 }}">>}]]}.
+     compare_templates([{<<"Orange">>, <<"{{ color }}">>},
+                        {<<"Piglets: 4">>, <<"Piglets: {{ piglets }}">>},
+                        {<<"{1,2,3}">>, <<"{{ an_atom }}">>},
+                        {<<"[1,2,3] = L">>, <<"{{ a_list }} = L">>},
+                        {<<"1">>, <<"{{ nested.a }}">>},
+                        {<<"Oink">>, <<"{{ \"Oink\" }}">>},
+                        {<<"2">>, <<"{{ 2 }}">>},
+                        {<<"8.8">>, <<"{{ 8.8 }}">>},
+                        {<<"-1.9">>, <<"{{ -1.9 }}">>},
+                        {<<"-4">>, <<"{{ -4 }}">>},
+                        {<<"1.89e5">>, <<"{{ 1.89e5 }}">>},
+                        {<<"2">>, <<"{{ 2 }}">>}], Ctx)}.
+
+basic_filter_test_() ->
+    Ctx = dtl_context:new(),
+    {setup, fun setup/0, fun teardown/1,
+     compare_templates([{<<"PIG">>, <<"{{ \"pig\"|upper }}">>},
+                        {<<" 1c2o3w ">>, <<" {{ \"1C2O3w\" | lower }} ">>},
+                        {<<"PIG">>, <<"{{ \"PIG\"|lower|upper }}">>}], Ctx)}.
+
+compare_templates(Tests, Ctx) ->
+     [?_assertEqual({ok, Out, Ctx},
+                    dtl_template:render(dtl_template:new(In), Ctx))
+        || {Out, In} <- Tests].

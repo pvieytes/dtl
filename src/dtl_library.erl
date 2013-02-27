@@ -25,7 +25,32 @@
 %%      implements the `dtl_library' behaviour.
 -module(dtl_library).
 
--callback registered_tags() ->
-    [atom() | {atom(), [{term(), term()}]}].
--callback registered_filters() ->
-    [atom() | {atom(), [{term(), term()}]}].
+-type filter_spec() :: atom().
+-type tag_spec() :: atom()
+                  | {inclusion_tag, list(), atom()}
+                  | {simple_tag, atom()}.
+
+-callback registered_filters() -> [filter_spec()].
+-callback registered_tags() -> [tag_spec()].
+
+-export([add_filters/2,
+         add_tags/2]).
+-export_type([filter_spec/0,
+              tag_spec/0]).
+
+-spec add_filters(atom(), dict()) -> dict().
+add_filters(Mod, Filters) ->
+    lists:foldl(fun (Filter, Dict) ->
+        dict:store(Filter, {Mod, Filter}, Dict)
+    end, Filters, Mod:registered_filters()).
+
+-spec add_tags(atom(), dict()) -> dict().
+add_tags(Mod, Tags) ->
+    lists:foldl(fun
+        (Tag = {simple_tag, Fun}, Dict) ->
+            dict:store(Fun, Tag, Dict);
+        (Tag = {inclusion_tag, _Path, Fun}, Dict) ->
+            dict:store(Fun, Tag, Dict);
+        (Tag, Dict) ->
+            dict:store({normal_tag, Tag}, Tag, Dict)
+    end, Tags, Mod:registered_tags()).

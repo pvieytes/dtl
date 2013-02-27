@@ -27,5 +27,16 @@
 -export([registered_tags/0,
          registered_filters/0]).
 
+%% Filters.
+-export([lower/1,
+         upper/1]).
+
 registered_tags() -> [].
-registered_filters() -> [].
+registered_filters() -> [lower,
+                         upper].
+
+lower(Bin) ->
+    list_to_binary(string:to_lower(binary_to_list(Bin))).
+
+upper(Bin) ->
+    list_to_binary(string:to_upper(binary_to_list(Bin))).

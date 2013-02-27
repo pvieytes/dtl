@@ -28,7 +28,8 @@
 
 -type parser() :: #dtl_parser{}.
 
--export([find_filter/2,
+-export([add_library/2,
+         find_filter/2,
          new/1,
          parse/1,
          parse/2,
@@ -39,7 +40,15 @@
 %% @doc Creates a new, empty parser.
 -spec new([dtl_lexer:token()]) -> parser().
 new(Tokens) ->
-    #dtl_parser{tokens = Tokens}.
+    Parser = #dtl_parser{tokens = Tokens,
+                         filters = dict:new(),
+                         tags = dict:new()},
+    add_library(Parser, dtl_default_library).
+
+-spec add_library(parser(), atom()) -> parser().
+add_library(Parser = #dtl_parser{tags = Tags, filters = Filters}, Mod) ->
+    Parser#dtl_parser{filters = dtl_library:add_filters(Mod, Filters),
+                      tags = dtl_library:add_tags(Mod, Tags)}.
 
 %% @doc Parses all tokens within the provided parser, returning the
 %%      resulting nodelist. See parse/2 for errors.
@@ -104,9 +113,9 @@ parse_until(_Parser, [], _Until, _Nodes) ->
     {error, unclosed_block_tag}.
 
 %% @doc Splits a block tag template token into its constituent parts,
-%%      splitting on all whitespace not contained in a "" or '' pair.
+%%      splitting on all whitespace not contained in a "" pair.
+-spec split_token(binary()) -> binary().
 split_token(Src) ->
-    %% TODO: Add support for _("Text") like in Django.
     dtl_string:smart_split(Src).
 
 run_command(_Parser, _Cmd, _Token) ->
@@ -117,8 +126,8 @@ run_command(_Parser, _Cmd, _Token) ->
 find_filter(#dtl_parser{filters = Filters}, Name) ->
     case dtl_string:safe_list_to_atom(binary_to_list(Name)) of
         error -> error;
-        A -> case lists:keysearch(A, 1, Filters) of
-            {value, {A, Spec}} -> Spec;
-            false -> error
+        A -> case dict:find(A, Filters) of
+            error -> error;
+            {ok, Spec} -> Spec
         end
     end.

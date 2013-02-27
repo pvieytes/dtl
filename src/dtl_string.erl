@@ -33,7 +33,7 @@
     "((?:"
         %% 1.1. Any number of non-space, ', " characters (spaces and quote
         %%    marks are our delimiters).
-        "[^\\s'\"]*"
+        "[^\\s\"]*"
 
         %% 1.2. Any number of quoted groups, optionally surrounded by
         %%      unquoted, non-quote, non-space text.
@@ -42,9 +42,9 @@
         %%      "" and '' must match.
         "(?:"
             %% 1.3.1 Double quotes and any number of non-quotes in-between.
-            "(?:\"(?:[^\"\\\\]|\\\\.)*\"|'(?:[^'\\\\]|\\\\.)*')"
+            "\"(?:[^\"\\\\]|\\\\.)*\""
             %% 1.3.2. Any number of non-delimiters (see #1.1)
-            "[^\\s'\"]*"
+            "[^\\s\"]*"
         ")+"
     %% 2. Or any number of non-space characters.
     ")|\\S+)").

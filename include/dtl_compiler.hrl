@@ -48,8 +48,8 @@
 
 -record(dtl_parser, {
     tokens :: [dtl_lexer:token()],
-    tags = [],
-    filters = []
+    tags :: dict(),
+    filters :: dict()
 }).
 
 -record(dtl_filter_expr, {
