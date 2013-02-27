@@ -28,7 +28,8 @@
 
 -type parser() :: #dtl_parser{}.
 
--export([new/1,
+-export([find_filter/2,
+         new/1,
          parse/1,
          parse/2,
          split_token/1]).
@@ -38,9 +39,7 @@
 %% @doc Creates a new, empty parser.
 -spec new([dtl_lexer:token()]) -> parser().
 new(Tokens) ->
-    #dtl_parser{tokens = Tokens,
-                tags = [],
-                filters = []}.
+    #dtl_parser{tokens = Tokens}.
 
 %% @doc Parses all tokens within the provided parser, returning the
 %%      resulting nodelist. See parse/2 for errors.
@@ -71,7 +70,7 @@ parse(Parser = #dtl_parser{tokens = Tokens}, Until) ->
 parse_until(Parser, [{?TOKEN_TEXT, Src}|Tokens], Until, Nodes) ->
     parse_until(Parser, Tokens, Until, [Src|Nodes]);
 parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
-    FilterExpr = dtl_filter:parse(Src),
+    FilterExpr = dtl_filter:parse(Src, Parser),
     Node = dtl_node:new_var(FilterExpr),
     parse_until(Parser, Tokens, Until, [Node|Nodes]);
 %% TODO: Clean up this ugly function ...
@@ -113,3 +112,10 @@ split_token(Src) ->
 run_command(_Parser, _Cmd, _Token) ->
     %% Stub, pending library functions.
     ok.
+
+-spec find_filter(parser(), atom()) -> {atom(), atom()} | error.
+find_filter(#dtl_parser{filters = Filters}, Name) ->
+    case lists:keysearch(Name, 1, Filters) of
+        {value, {Name, Spec}} -> Spec;
+        false -> error
+    end.

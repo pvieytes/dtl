@@ -26,6 +26,7 @@
 -module(dtl_node).
 
 -export([new_var/1,
+         render/2,
          render_list/2,
          render_var/2]).
 
@@ -35,23 +36,13 @@
 -type tnodelist() :: [tnode()].
 -export_type([tnode/0, tnodelist/0]).
 
--spec new_var(dtl_filter:expr()) -> tnode().
-new_var(FilterExpr) ->
-    #dtl_node{renderer = {?MODULE, render_var},
-              state = FilterExpr}.
-
--spec render_var(tnode(), dtl_context:context()) ->
-    binary().
-render_var(_Node, _Ctx) -> <<>>.
-
 %% @doc Renders a list of nodes.
 -spec render_list(tnodelist(), dtl_context:context()) ->
     {ok, [binary()]}.
 render_list(NodeList, Ctx) ->
     {ok, render_list(NodeList, Ctx, [])}.
 
--spec render_list(tnodelist(), dtl_context:context(),
-        [binary()]) ->
+-spec render_list(tnodelist(), dtl_context:context(), [binary()]) ->
     [binary()].
 render_list([Node|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
@@ -65,3 +56,26 @@ render(Node = #dtl_node{renderer = Fun}, Ctx) ->
     Fun(Node, Ctx);
 render(Node, _Ctx) when is_list(Node) -> list_to_binary(Node);
 render(Node, _Ctx) when is_binary(Node) -> Node.
+
+%%
+%% Variable nodes: Consist of {{ Var[|filter...] }}.
+%
+%% See `dtl_filter:parse/2' for more details on this format.
+%%
+
+%% @doc Variable node initializer.
+-spec new_var(dtl_filter:expr()) -> tnode().
+new_var(FilterExpr) ->
+    #dtl_node{renderer = {?MODULE, render_var},
+              state = FilterExpr}.
+
+%% @doc Variable node renderer.
+-spec render_var(tnode(), dtl_context:context()) -> binary().
+render_var(#dtl_node{state = FilterExpr}, Ctx) ->
+    var_to_binary(dtl_filter:resolve_expr(FilterExpr, Ctx)).
+
+-spec var_to_binary(term()) -> binary().
+var_to_binary(T) when is_binary(T) -> T;
+%% This behavior may be configurable.
+var_to_binary(undefined) -> <<>>;
+var_to_binary(T) -> io_lib:format("~w", [T]).

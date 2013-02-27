@@ -43,8 +43,17 @@
 -define(VARIABLE_ATTRIBUTE_SEPARATOR, ".").
 -define(TRANSLATOR_COMMENT_MARK, "Translators").
 
+-define(FILTER_SEP, "|").
+-define(FILTER_ARG_SEP, ":").
+
 -record(dtl_parser, {
     tokens :: [dtl_lexer:token()],
-    tags,
-    filters
+    tags = [],
+    filters = []
+}).
+
+-record(dtl_filter_expr, {
+    var :: term(),
+    token :: binary(),
+    filters = [] :: [dtl_filter:filter()]
 }).
