@@ -37,7 +37,7 @@
               filter/0]).
 
 %% Double-quoted string.
--define(STRING_CHARS, "[^\"\\\\]*(?:\\.[^\"\\\\]*)*").
+-define(CONSTANT_RE, "(?:\"[^\"\\\\]*(?:\\.[^\"\\\\]*)*\")").
 %% Numbers.
 -define(NUM_RE, "[-+\.]?\\d[\\d\\.e]*").
 %% Variable names.
@@ -47,13 +47,13 @@
 %% Filter argument separator.
 -define(ARG_SEP_RE, ++ dtl_string:escape_re(?FILTER_ARG_SEP) ++).
 %% Parses a filter expression: [str|var]\|filter_name[:(str|var)...].
--define(FILTER_RE, "(?:\"(?P<constant>" ?STRING_CHARS ")\")|"
+-define(FILTER_RE, "(?P<constant>" ?CONSTANT_RE ")|"
                    "(?P<var>[" ?VAR_CHARS_RE "]+|" ?NUM_RE ")|"
                    "(?:\\s*" ?SEP_RE "\\s*"
                    "(?P<filter_name>\\w+)"
                        "(?:" ?ARG_SEP_RE
                            "(?:"
-                               "(?:\"(?P<constant_arg>" ?STRING_CHARS ")\")|"
+                               "(?P<constant_arg>" ?CONSTANT_RE ")|"
                                "(?P<var_arg>[" ?VAR_CHARS_RE "]+|" ?NUM_RE ")"
                            ")"
                        ")?"
@@ -89,7 +89,7 @@ process_matches([[<<>>, Var, _, _, _]|Matches], undefined, Filters, Parser) ->
     process_matches(Matches, process_var(Var), Filters, Parser);
 %% Use the first constant.
 process_matches([[Const, <<>>, _, _, _]|Matches], undefined, Filters, Parser) ->
-    process_matches(Matches, Const, Filters, Parser);
+    process_matches(Matches, process_string(Const), Filters, Parser);
 %% Save the filter name and an argument, if present.
 process_matches([[_, _, Name, ConstArg, VarArg]|Matches], Var, Filters, Parser) ->
     case dtl_parser:find_filter(Parser, Name) of
@@ -97,7 +97,7 @@ process_matches([[_, _, Name, ConstArg, VarArg]|Matches], Var, Filters, Parser) 
         FilterFun ->
             Args = case {ConstArg, VarArg} of
                 {<<>>, <<>>} -> [];
-                {Const, <<>>} -> [{false, Const}];
+                {Const, <<>>} -> [{false, process_string(Const)}];
                 {<<>>, Var2} -> [{true, process_var(Var2)}]
             end,
             Filter = {FilterFun, Args},
@@ -106,6 +106,23 @@ process_matches([[_, _, Name, ConstArg, VarArg]|Matches], Var, Filters, Parser) 
 %% Finished.
 process_matches([], Var, Filters, _Parser) ->
     {Var, Filters}.
+
+%% Process a double-quoted string.
+-spec process_string(binary()) -> binary().
+process_string(Bin) ->
+    case process_term(Bin) of
+        {error, Reason} -> {error, Reason};
+        Term -> list_to_binary(Term)
+    end.
+
+%% Process a raw Erlang term.
+-spec process_term(binary()) -> term() | {error, invalid_constant}.
+process_term(Const) ->
+    case erl_scan:string(binary_to_list(Const)) of
+        %% There should only be one term.
+        {ok, [{_Type, _Pos, Term}|_Terms], _Loc} -> Term;
+        {error, _, _Loc} -> {error, invalid_term}
+    end.
 
 %% Parse a variable specification.
 -spec process_var(binary()) -> [list()].
