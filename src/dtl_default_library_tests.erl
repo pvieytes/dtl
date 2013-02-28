@@ -20,22 +20,7 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc Tags are functions that return callbacks which in turn return
-%%      nodelists (see `dtl_node'). They are used to transform templates
-%%      in ways that filters cannot because they can consume tokens,
-%%      whereas filters only replace the explicitly filtered content
-%%      (see `dtl_filter').
--module(dtl_tag).
+%% @doc Default template tag and filter tests.
+-module(dtl_default_library_tests).
 
--type tag() :: {module(), dtl_library:name()}
-             | {{module(), atom()}, {module(), dtl_library:name()}, term()}.
-
--export([run/3]).
--export_type([tag/0]).
-
--spec run(tag(), dtl_parser:parser(), dtl_lexer:token()) ->
-    {ok, dtl_node:tnode(), dtl_parser:parser()} | {error, atom()}.
-run({{WrapMod, WrapFun, Arg}, {Mod, Fun}}, Parser, Token) ->
-    WrapMod:WrapFun(Arg, Mod, Fun, Parser, Token);
-run({Mod, Fun}, Parser, Token) ->
-    Mod:Fun(Parser, Token).
+-include_lib("eunit/include/eunit.hrl").

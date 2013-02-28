@@ -28,13 +28,14 @@
 
 -type expr() :: #dtl_filter_expr{}.
 -type filter() :: {filter_fun(), [filter_arg()]}.
--type filter_fun() ::{atom(), atom()}.
+-type filter_fun() ::{module(), atom()}.
 -type filter_arg() :: {boolean(), term()}.
 
 -export([parse/2,
          resolve_expr/2]).
 -export_type([expr/0,
-              filter/0]).
+              filter/0,
+              filter_fun/0]).
 
 %% Double-quoted string.
 -define(CONSTANT_RE, "(?:\"[^\"\\\\]*(?:\\.[^\"\\\\]*)*\")").
@@ -85,26 +86,33 @@ parse(Token, Parser) ->
 process_matches([[<<>>, <<>>, _, _, _]|_], undefined, _, _) ->
     {error, no_variable};
 %% Use the first variable.
-process_matches([[<<>>, Var, _, _, _]|Matches], undefined, Filters, Parser) ->
+process_matches([[<<>>, Var, _, _, _]|Matches], undefined, Filters,
+        Parser) ->
     process_matches(Matches, process_var(Var), Filters, Parser);
 %% Use the first constant.
-process_matches([[Const, <<>>, _, _, _]|Matches], undefined, Filters, Parser) ->
+process_matches([[Const, <<>>, _, _, _]|Matches], undefined, Filters,
+        Parser) ->
     process_matches(Matches, process_string(Const), Filters, Parser);
 %% Save the filter name and an argument, if present.
-process_matches([[_, _, Name, ConstArg, VarArg]|Matches], Var, Filters, Parser) ->
-    case dtl_parser:find_filter(Parser, Name) of
-        error -> process_matches(Matches, Var, Filters, Parser);
-        FilterFun ->
-            Args = case {ConstArg, VarArg} of
-                {<<>>, <<>>} -> [];
-                {Const, <<>>} -> [{false, process_string(Const)}];
-                {<<>>, Var2} ->
-                    Var3 = process_var(Var2),
-                    Lookup = is_list(Var3),
-                    {Lookup, Var3}
-            end,
-            Filter = {FilterFun, Args},
-            process_matches(Matches, Var, [Filter|Filters], Parser)
+process_matches([[_, _, RawName, ConstArg, VarArg]|Matches], Var,
+        Filters, Parser) ->
+    case dtl_string:safe_list_to_atom(binary_to_list(RawName)) of
+        error -> {error, unknown_filter};
+        Name ->
+            case dtl_parser:find_filter(Parser, Name) of
+                nomatch -> {error, unknown_filter};
+                {ok, FilterFun} ->
+                    Args = case {ConstArg, VarArg} of
+                        {<<>>, <<>>} -> [];
+                        {Const, <<>>} -> [{false, process_string(Const)}];
+                        {<<>>, Var2} ->
+                            Var3 = process_var(Var2),
+                            Lookup = is_list(Var3),
+                            {Lookup, Var3}
+                    end,
+                    Filter = {FilterFun, Args},
+                    process_matches(Matches, Var, [Filter|Filters], Parser)
+            end
     end;
 %% Finished.
 process_matches([], Var, Filters, _Parser) ->
@@ -131,7 +139,7 @@ process_term(Const) ->
 
 %% Parse a variable specification. This function is designed to handle
 %% numbers as well. Django does it this way, but this approach probably
-%% isn't idea.
+%% isn't ideal.
 -spec process_var(binary()) -> [list()].
 process_var(Num = <<C, _/binary>>) when C >= $0, C =< $9;
                                         C =:= $+;
@@ -142,10 +150,16 @@ process_var(Var) ->
 
 -spec resolve_expr(expr(), dtl_context:context()) -> term().
 resolve_expr(#dtl_filter_expr{var = Var, filters = Filters}, Ctx) ->
-    filter_var(resolve_var(Var, Ctx), Filters, Ctx).
+    lists:foldl(fun ({{Mod, Fun}, Args}, Var2) ->
+        RealArgs = case Args of
+            [] -> [Var2];
+            [{true, Arg}] -> [Var2, resolve_lookup(Arg, Ctx)];
+            [{false, Arg}] -> [Var2, Arg]
+        end,
+        apply(Mod, Fun, RealArgs)
+    end, resolve_var(Var, Ctx), Filters).
 
 -spec resolve_var(term(), dtl_context:context()) -> binary().
-%% Ensure Lookup is a list of lists.
 resolve_var(Lookup = [[_|_]|_], Ctx) -> resolve_lookup(Lookup, Ctx);
 resolve_var(T, _Ctx) -> T.
 
@@ -165,13 +179,3 @@ resolve_lookup([Head|Lookups], Ctx) ->
 %% Empty if undefined.
 resolve_lookup(_, undefined) -> undefined;
 resolve_lookup([], Val) -> Val.
-
--spec filter_var(term(), [filter()], dtl_context:context()) -> term().
-filter_var(Var, [{{Mod, Fun}, Args}|Filters], Ctx) ->
-    RealArgs = case Args of
-        [] -> [Var];
-        [{true, Arg}] -> [Var, resolve_lookup(Arg, Ctx)];
-        [{false, Arg}] -> [Var, Arg]
-    end,
-    filter_var(apply(Mod, Fun, RealArgs), Filters, Ctx);
-filter_var(Var, [], _Ctx) -> Var.

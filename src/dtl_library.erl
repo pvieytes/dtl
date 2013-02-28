@@ -25,17 +25,22 @@
 %%      implements the `dtl_library' behaviour.
 -module(dtl_library).
 
--type filter_spec() :: atom().
--type tag_spec() :: atom()
-                  | {inclusion_tag, list(), atom()}
-                  | {simple_tag, atom()}.
+-type name() :: atom().
+-type library() :: dict().
+-type filter_spec() :: name().
+-type tag_spec() :: name()
+                  | {{module(), atom()}, name()}
+                  | {{module(), atom(), term()}, name()}.
 
 -callback registered_filters() -> [filter_spec()].
 -callback registered_tags() -> [tag_spec()].
 
 -export([add_filters/2,
-         add_tags/2]).
+         add_tags/2,
+         search_collection/2]).
 -export_type([filter_spec/0,
+              library/0,
+              name/0,
               tag_spec/0]).
 
 %% @doc Update the filters dict with all filters registered to the
@@ -50,11 +55,24 @@ add_filters(Mod, Filters) ->
 %%      `dtl_library' callback module.
 -spec add_tags(atom(), dict()) -> dict().
 add_tags(Mod, Tags) ->
-    lists:foldl(fun
-        ({simple_tag, Fun}, Dict) ->
-            dict:store(Fun, {simple_tag, Mod, Fun}, Dict);
-        ({inclusion_tag, Path, Fun}, Dict) ->
-            dict:store(Fun, {inclusion_tag, Path, Mod, Fun}, Dict);
-        (Tag, Dict) ->
-            dict:store(Tag, {normal_tag, Mod, Tag}, Dict)
+    lists:foldl(fun (UserTagSpec, Dict) ->
+        {Name, Tag} = convert_user_tag_spec(Mod, UserTagSpec),
+        dict:store(Name, Tag, Dict)
     end, Tags, Mod:registered_tags()).
+
+-spec convert_user_tag_spec(name(), tag_spec())
+    -> {name(), dtl_tag:tag()}.
+convert_user_tag_spec(Mod, {{WrapMod, WrapFun}, Name}) ->
+    {Name, {{WrapMod, WrapFun, []}, {Mod, Name}}};
+convert_user_tag_spec(Mod, {{WrapMod, WrapFun, Arg}, Name}) ->
+    {Name, {{WrapMod, WrapFun, Arg}, {Mod, Name}}};
+convert_user_tag_spec(Mod, Name) ->
+    {Name, {Mod, Name}}.
+
+-spec search_collection(library(), name()) ->
+    dtl_tag:tag() | dtl_filter:filter() | nomatch.
+search_collection(Coll, Name) ->
+    case dict:find(Name, Coll) of
+        error -> nomatch;
+        {ok, Spec} -> {ok, Spec}
+    end.

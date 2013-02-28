@@ -44,32 +44,34 @@ documentation](https://github.com/basho/rebar) if this is unclear.
 
 ##3. Configuration
 
-These are the application-wide configuration keys:
+These are the application-wide environment variables. Set them like you
+do any other application options.
 
-|Key                  |Type                 |Default                           |
-|---------------------|---------------------|----------------------------------|
-|apps                 |`[atom()]`           |`[]`                              |
-|debug                |`boolean()`          |`false`                           |
-|context\_processors  |`[{atom(), atom()}]` |`[]`                              |
-|settings\_module     |`atom()`             |`dtl_app_config_settings`         |
-|template\_dirs       |`[list()]`           |`[]`                              |
-|template\_loaders    |`[atom()]`           |`[dtl_fs_loader, dtl_apps_loader]`|
+**settings\_module**: `module()` (Default: `dtl_app_config_settings`):
+Module used to look up settings, must implement `dtl_settings`.
 
-**apps**: A list of apps that the `dtl_apps_loader` should use.
+**context\_processors**: `[{module(), atom()}]` (Default: `[]`): List of
+`{Mod, Fun}` tuples that are called in left-to-right order to populate
+all new `dtl_context:context()` records.
 
-**context\_processors**: A list of {Module, Function} two-tuples. Which
-    are processed in order during context creation. See 6. Contexts.
+**debug**: `boolean()` (Default: `false`): `true` to enable debugging
+aids, `false` otherwise.
 
-**debug**: Set `true` to allow more detailed debugging output in
-    rendered templates, `false` otherwise.
+**template\_dirs**: `[list()]` (Default: ["priv/templates"]):
+Template directories that `dtl_fs_loader` should search, from left.
+Paths can be absolute or relative.
 
-**template\_dirs**: A list of arbitrary file system locations where
-    `dtl_fs_loader` will look for templates.
+**template\_loaders**: `[module()]`
+(Default: `[dtl_fs_loader, dtl_apps_loader]`): List of modules
+implementing the `dtl_loader` interface. These are used to look up
+templates at runtime.
 
-**template\_loaders**:
-    A list of modules implementing the `dtl_loader` behaviour. During
-    template lookup, they will be tried in the order specified. See 7.
-    Loader Modules.
+**empty\_term\_replacement**: `[binary()]` (Default: `<<>>`): Binary
+that will replace any `undefined` terms in templates. `"None"` and
+`"undefined"` are also good ones.
+
+**apps**: `[atom()]` (Default: `[]`): A list of application names that
+will be searched in left-to-right order by `dtl_apps_loader`.
 
 At the lowest level, these settings are managed by application env vars.
 The defaults in the above table are all defined at this level.
@@ -77,6 +79,10 @@ The defaults in the above table are all defined at this level.
 Users can look up settings with `dtl:setting/1`:
 
     Apps = dtl:setting(apps).
+
+It is not a good idea to change settings at runtime, but use a custom
+settings module if you need this functionality and still be aware of
+potential race conditions.
 
 
 ###3.1 Settings Modules

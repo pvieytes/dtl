@@ -74,39 +74,40 @@ parse(Parser = #dtl_parser{tokens = Tokens}, Until) ->
     parse_until(Parser, Tokens, Until, []).
 
 -spec parse_until(parser(), [dtl_lexer:token()], [atom()],
-        dtl_node:tnodelist()) ->
-    {ok, dtl_node:tnodelist(), parser()} | {error, atom()}.
+        dtl_node:tnodelist()) -> {ok, dtl_node:tnodelist(), parser()}
+                               | {error, empty_block_tag
+                                       | unknown_tag
+                                       | unclosed_block_tag}.
 parse_until(Parser, [{?TOKEN_TEXT, Src}|Tokens], Until, Nodes) ->
     parse_until(Parser, Tokens, Until, [Src|Nodes]);
 parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
     FilterExpr = dtl_filter:parse(Src, Parser),
     Node = dtl_node:new_var(FilterExpr),
     parse_until(Parser, Tokens, Until, [Node|Nodes]);
-%% TODO: Clean up this ugly function ...
+%% TODO: Clean up this hideous function ...
 parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|_Tokens],
         Until, Nodes) ->
     case split_token(Src) of
         [] -> {error, empty_block_tag};
-        [CmdBin|_Rest] ->
-            CmdString = binary_to_list(CmdBin),
-            case dtl_string:safe_list_to_atom(CmdString) of
+        [RawName|_] ->
+            case dtl_string:safe_list_to_atom(binary_to_list(RawName)) of
                 error -> {error, unknown_tag};
-                Cmd ->
-                    case lists:member(Cmd, Until) of
-                        %% Is in the "parse until" list,
+                Name ->
+                    case lists:member(Name, Until) of
                         true ->
                             {ok, Nodes,
                              Parser#dtl_parser{tokens = AllTokens}};
                         false ->
-                            case run_command(Parser, Cmd, Token) of
-                                {ok, Node, Parser2} ->
-                                    parse_until(Parser2,
-                                                Parser2#dtl_parser.tokens,
-                                                Until, [Node|Nodes]);
-                                error ->
-                                    parse_until(Parser,
-                                                Parser#dtl_parser.tokens,
-                                                Until, Nodes)
+                            case find_tag(Parser, Name) of
+                                nomatch -> {error, unknown_tag};
+                                {ok, Tag} ->
+                                    case dtl_tag:run(Tag, Parser, Token) of
+                                        {ok, Node, Parser2} ->
+                                            parse_until(Parser2,
+                                                        Parser2#dtl_parser.tokens,
+                                                        Until, [Node|Nodes]);
+                                        Err -> Err
+                                    end
                             end
                     end
             end
@@ -122,36 +123,14 @@ parse_until(_Parser, [], _Until, _Nodes) ->
 split_token(Src) ->
     dtl_string:smart_split(Src).
 
-%% TODO: Refactor this somewhat ... these probably should live in
-%% `dtl_tag' or `dtl_library'.
-
--spec run_command(parser(), atom(), binary()) ->
-    {ok, dtl_node:tnode(), parser()} | error.
-run_command(Parser = #dtl_parser{tags = Tags}, Cmd, Token) ->
-    case dtl_string:safe_list_to_atom(binary_to_list(Cmd)) of
-        error -> error;
-        A -> case dict:find(A, Tags) of
-            error -> error;
-            {ok, Spec} -> run_command_tag(Spec, Parser, Token)
-        end
-    end.
-
--spec run_command_tag(dtl_library:tag_spec(), parser(), dtl_lexer:token()) ->
-    {ok, dtl_node:tnode(), parser()}.
-run_command_tag({normal_tag, Mod, Fun}, Parser, Token) ->
-    {Node, Parser2} = Mod:Fun(Parser, Token),
-    {ok, Node, Parser2};
-run_command_tag({simple_tag, Mod, Fun}, Parser, Token) ->
-    ok;
-run_command_tag({inclusion_tag, Path, Mod, Fun}, Parser, Token) ->
-    ok.
-
--spec find_filter(parser(), binary()) -> {atom(), atom()} | error.
+%% @doc Searches the parser's filter collection for a filter with the
+%%      provided name.
+-spec find_filter(parser(), dtl_library:name()) ->
+    dtl_filter:filter_fun() | nomatch.
 find_filter(#dtl_parser{filters = Filters}, Name) ->
-    case dtl_string:safe_list_to_atom(binary_to_list(Name)) of
-        error -> error;
-        A -> case dict:find(A, Filters) of
-            error -> error;
-            {ok, Spec} -> Spec
-        end
-    end.
+    dtl_library:search_collection(Filters, Name).
+
+-spec find_tag(parser(), dtl_library:name()) ->
+    {ok, dtl_library:tag_spec()} | nomatch.
+find_tag(#dtl_parser{tags = Tags}, Name) ->
+    dtl_library:search_collection(Tags, Name).

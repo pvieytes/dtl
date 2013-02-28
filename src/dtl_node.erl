@@ -23,6 +23,8 @@
 %% @doc Functions for working with template nodes. Nodes are the core
 %%      building block of templates, and templates are rendered by
 %%      recursively rendering nodelists, which in turn render nodes.
+%%
+%%      Definitions of core node types (text, variable, etc.).
 -module(dtl_node).
 
 -export([new_var/1,
@@ -32,6 +34,7 @@
 
 -include("dtl.hrl").
 
+%% Prefix with `t' to avoid an confusion with real `node()' types.
 -type tnode() :: #dtl_node{} | list() | binary().
 -type tnodelist() :: [tnode()].
 -export_type([tnode/0, tnodelist/0]).
@@ -76,6 +79,6 @@ render_var(#dtl_node{state = FilterExpr}, Ctx) ->
 
 -spec var_to_binary(term()) -> binary().
 %% This behavior may be configurable.
-var_to_binary(undefined) -> <<>>;
+var_to_binary(undefined) -> dtl:setting(empty_term);
 var_to_binary(T) when is_binary(T) -> T;
 var_to_binary(T) -> list_to_binary(io_lib:format("~w", [T])).
