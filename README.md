@@ -297,12 +297,12 @@ Name|Implemented
 
 DTL comes with two template loader modules, which are described here:
 
-**dtl\_fs\_loader**: This loader tries each of the configured
+`dtl_fs_loader`: This loader tries each of the configured
     `template_dirs`, in order, to see if the named template exists in
     one of them. Only templates contained in one of these directories
     will be found.
 
-**dtl\_apps\_loader**: This loader searches in "templates" in the "priv"
+`dtl_apps_loader`: This loader searches in "templates" in the "priv"
     directory of each app specified with the `apps` configuration
     option.  That is, "index.html" would be searched for at
     foo/priv/templates/index.html if `foo` were included in the `apps`
