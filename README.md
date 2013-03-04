@@ -47,7 +47,7 @@ documentation](https://github.com/basho/rebar) if this is unclear.
 The `dtl` application must be started for the engine to work at all.
 Include this in your application so that it is run before you use `dtl`:
 
-    `ok = application:start(dtl).`
+    ok = application:start(dtl).
 
 Right now this might seem funny because DTL is mostly a library
 application, but it is needed for application config to work. It also
