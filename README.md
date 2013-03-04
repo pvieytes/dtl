@@ -197,8 +197,9 @@ Now, a template could access `time` and `date` variables.
 
 ##7. Built-in Tags and Filters
 
-Tags: "load"
-Filters: "upper", "lower"
+Tags: `load`
+
+Filters: `addslashes`, `capfirst`, `lower`, `upper`.
 
 Target: https://docs.djangoproject.com/en/dev/ref/templates/builtins/
 

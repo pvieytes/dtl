@@ -47,6 +47,14 @@ load_tag_test_() ->
                              {<<"Named `simple_named'">>, <<"{% simple_named %}">>}]
         ], dtl_context:new([{dog, <<"Dog">>}])).
 
+filter_test_() ->
+    Ctx = dtl_context:new([{ quotes, <<"'\"\\">>}]),
+    dtl_tests:compare_templates([{<<"abc">>, <<"{{ \"ABC\"|lower }}">>},
+                                 {<<"ABC">>, <<"{{ \"abc\"|upper }}">>},
+                                 {<<"\\'\\\"\\\\">>, <<"{{ quotes|addslashes }}">>},
+                                 {<<"Trout">>, <<"{{ \"trout\"|capfirst }}">>}], Ctx).
+
+
 %% dtl_library.
 registered_filters() -> [make_cat].
 registered_tags() -> [simple,
@@ -77,6 +85,8 @@ wc_render(Node, Ctx) ->
         {match, Ms} -> length(Ms)
     end,
     list_to_binary(integer_to_list(Wc)).
+
+%% TODO: Move these simple_* tests into `dtl_library_tests'.
 
 simple(Parser, _) -> {ok, <<"Simple">>, Parser}.
 

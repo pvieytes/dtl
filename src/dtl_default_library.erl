@@ -28,35 +28,57 @@
          registered_filters/0]).
 
 %% Filters
--export([lower/1,
+-export([addslashes/1,
+         capfirst/1,
+         lower/1,
          upper/1]).
+-spec addslashes(binary()) -> binary().
+-spec capfirst(binary()) -> binary().
+-spec lower(binary()) -> binary().
+-spec upper(binary()) -> binary().
+
 %% Tags
 -export([load/2]).
+-spec load(dtl_parser:parser(), dtl_lexer:token()) ->
+    {ok, dtl_node:tnode(), dtl_parser:parser()}
+        | {error, missing_library | load_tag_syntax_error}.
 
 registered_tags() -> [load].
-registered_filters() -> [lower,
+registered_filters() -> [addslashes,
+                         capfirst,
+                         lower,
                          upper].
 
 %%
 %% Filters
 %%
--spec lower(binary()) -> binary().
-lower(Bin) ->
-    list_to_binary(string:to_lower(binary_to_list(Bin))).
 
--spec upper(binary()) -> binary().
+%% @doc Adds backslash prefix to single quotes, double quotes, and
+%%      backslashes. {{ "'\"\\" }} -> "\\'\\\"\\\\".
+addslashes(Bin) ->
+    binary:replace(Bin, [<<"\\">>, <<"'">>, <<"\"">>], <<"\\">>,
+                   [global, {insert_replaced, 1}]).
+
+%% @doc Capitalizes the first character of the input.
+%%      {{ "pig"|capfirst }} -> "Pig".
+capfirst(Bin) ->
+    [C|S] = binary_to_list(Bin),
+    list_to_binary([ux_char:to_upper(C)|S]).
+
+%% @doc Converts upper to lowercase. {{ "FOO"|lower }} -> "foo".
+lower(Bin) ->
+    list_to_binary(ux_string:to_lower(binary_to_list(Bin))).
+
+%% @doc Converts lowercase to uppercase. {{ "foo"|upper }} -> "FOO".
 upper(Bin) ->
-    list_to_binary(string:to_upper(binary_to_list(Bin))).
+    list_to_binary(ux_string:to_upper(binary_to_list(Bin))).
 
 %%
 %% Tags
+%%
 
-%% Load tag: `{% load library_name %}'
-%%   Where `library_name' is a module implementing the `dtl_library'
-%%   interface.
--spec load(dtl_parser:parser(), dtl_lexer:token()) ->
-    {ok, dtl_node:tnode(), dtl_parser:parser()}
-        | {error, missing_library | load_tag_syntax_error}.
+%% @doc Loads tag: `{% load library_name %}' where `library_name' is a
+%%      module implementing the `dtl_library' interface.
 load(Parser, {_Type, Token}) ->
     case dtl_parser:split_token(Token) of
         [<<"load">>, LibBin] ->

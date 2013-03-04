@@ -25,77 +25,49 @@
 # Targets:
 #     all (dtl): Compile DTL's erlang sources.
 #     check (test): Run DTL's test suite.
+#     deps: Install all dependencies (requires `rebar').
 #     dialyze: Run Dialyze over the codebase.
 #     plt: Build files necessary for running `dialyze'.
 #
 # Options:
-#     ERLC: The path to the Erlang compiler executable.
-#     EFLAGS: Options for the Erlang compiler.
 #     DIALYZER: The path to the Dialyzer executable.
 #     CT_RUN: The path to the Common Test executable.
 #     CT_FLAGS: Extra options for Common Test.
 
 SHELL := bash
 PROGRAM = dtl
+REBAR ?= rebar
+DEPS = deps
 
 all: program
 
-# Options
-ERL ?= erl
-ERLC ?= erlc
-EFLAGS ?=
+get-deps: rebar.config
+	$(REBAR) get-deps
+
+deps: get-deps
+	$(REBAR) compile
 
 DIALYZER ?= dialyzer
 DIALYZER_FLAGS ?= -Wno_opaque
 
 CT_RUN ?= ct_run
-CT_FLAGS = -pa $(TEST_APP)/ebin 
+CT_FLAGS = -pa $(TEST_APP)/ebin -pa $(DEPS)/*/ebin
 CT_SUITES = eunit_SUITE
-
-PREREQ_BEAMS = ebin/dtl_library.beam \
-	       ebin/dtl_loader.beam \
-	       ebin/dtl_settings.beam
-
-# Files that require compilation.
-BEAMS = $(shell find src -name '*.erl' \
-	| sed -e s/\.erl$$/.beam/ -e s/src\\//ebin\\//)
-
-# Raw distributed module list.
-MAIN_ERLS = $(shell find src -name '*.erl' -not -name '*tests.erl')
-MODS = $(shell find src -name '*.erl' -not -name '*tests.erl' \
-	-exec basename {} .erl \;)
-
-# Distributed module list, as an erlang term.
-#
-# Note that this uses an unsafe array expansion. Don't use it files
-# could contain spaces (this is never the case for Erlang modules).
-MODLIST = $(shell bash -c 'mods=($(MODS)) ; IFS=, ; echo "[$${mods[*]}]"')
 
 TEST_APP = test/eunit_SUITE_data/test_app
 
-# These are separate because eventually we want to use the -j flag (job
-# count limit) in the main BEAMS compilation.
-program: ebin/$(PROGRAM).app $(PREREQ_BEAMS)
-	@$(MAKE) $(BEAMS)
+program:
+	$(REBAR) compile skip_deps=true
 
 clean: ct-clean doc-clean
+	$(REBAR) clean
 	$(MAKE) -C $(TEST_APP) clean
-	rm -rf ebin
 
 ct-clean:
 	rm -rf logs
 
 doc-clean:
 	rm -rf doc
-
-ebin/$(PROGRAM).app: src/$(PROGRAM).app.src
-	mkdir -p ebin
-	sed 's/{modules, \[\]}/{modules, $(MODLIST)}/' $< > $@
-
-# TODO: Make beam files depend on .hrl files.
-
-ebin/%.beam: src/%.erl
-	$(ERLC) $(EFLAGS) -o ebin -pa ebin -I include $?
 
 check: ct
 
