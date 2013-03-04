@@ -27,8 +27,6 @@
 -export([registered_tags/0,
          registered_filters/0]).
 
--include("dtl.hrl").
-
 %% Filters
 -export([lower/1,
          upper/1]).
@@ -62,12 +60,11 @@ upper(Bin) ->
 load(Parser, {_Type, Token}) ->
     case dtl_parser:split_token(Token) of
         [<<"load">>, LibBin] ->
-            Node = #dtl_node{name = "load"},
             case dtl_string:safe_list_to_atom(binary_to_list(LibBin)) of
                 error -> {error, missing_library};
                 Lib ->
                     Parser2 = dtl_parser:add_library(Parser, Lib),
-                    {ok, Node, Parser2}
+                    {ok, dtl_node:new("load"), Parser2}
             end;
         _ -> {error, load_tag_syntax_error}
     end.

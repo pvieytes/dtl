@@ -23,10 +23,12 @@
 %% @doc Template parsing functions.
 -module(dtl_parser).
 
--include("dtl.hrl").
--include("dtl_compiler.hrl").
+-include("compiler.hrl").
 
--type parser() :: #dtl_parser{}.
+-record(parser, {tokens :: [dtl_lexer:token()],
+                 tags :: dict(),
+                 filters :: dict()}).
+-opaque parser() :: #parser{}.
 
 -export([add_library/2,
          delete_first_token/1,
@@ -41,20 +43,20 @@
 %% @doc Creates a new, empty parser.
 -spec new([dtl_lexer:token()]) -> parser().
 new(Tokens) ->
-    Parser = #dtl_parser{tokens = Tokens,
-                         filters = dict:new(),
-                         tags = dict:new()},
+    Parser = #parser{tokens = Tokens,
+                     filters = dict:new(),
+                     tags = dict:new()},
     add_library(Parser, dtl_default_library).
 
 -spec add_library(parser(), atom()) -> parser().
-add_library(Parser = #dtl_parser{tags = Tags, filters = Filters}, Mod) ->
-    Parser#dtl_parser{filters = dtl_library:add_filters(Mod, Filters),
+add_library(Parser = #parser{tags = Tags, filters = Filters}, Mod) ->
+    Parser#parser{filters = dtl_library:add_filters(Mod, Filters),
                       tags = dtl_library:add_tags(Mod, Tags)}.
 
 %% @doc Parses all tokens within the provided parser, returning the
 %%      resulting nodelist. See parse/2 for errors.
 -spec parse(parser()) ->
-    {ok, dtl_node:tnodelist(), parser()} | {error, atom()}.
+    {ok, [dtl_node:tnode()], parser()} | {error, atom()}.
 parse(Parse) -> parse(Parse, []).
 
 %% @doc Parses all tokens within the provided parser until a block tag
@@ -70,12 +72,12 @@ parse(Parse) -> parse(Parse, []).
 %%
 %%      unknown_tag: If an unregistered block tag is encountered.
 -spec parse(parser(), [atom()]) ->
-    {ok, dtl_node:tnodelist(), parser()} | {error, atom()}.
-parse(Parser = #dtl_parser{tokens = Tokens}, Until) ->
+    {ok, [dtl_node:tnode()], parser()} | {error, atom()}.
+parse(Parser = #parser{tokens = Tokens}, Until) ->
     parse_until(Parser, Tokens, Until, []).
 
 -spec parse_until(parser(), [dtl_lexer:token()], [atom()],
-        dtl_node:tnodelist()) -> {ok, dtl_node:tnodelist(), parser()}
+       [dtl_node:tnode()]) -> {ok, dtl_node:tnodelist(), parser()}
                                | {error, empty_block_tag
                                        | unknown_tag
                                        | unclosed_block_tag}.
@@ -97,16 +99,16 @@ parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens],
                     case lists:member(Name, Until) of
                         true ->
                             {ok, Nodes,
-                             Parser#dtl_parser{tokens = AllTokens}};
+                             Parser#parser{tokens = AllTokens}};
                         false ->
                             case find_tag(Parser, Name) of
                                 nomatch -> {error, unknown_tag};
                                 {ok, Tag} ->
-                                    Parser2 = Parser#dtl_parser{tokens = Tokens},
+                                    Parser2 = Parser#parser{tokens = Tokens},
                                     case dtl_tag:run(Tag, Parser2, Token) of
                                         {ok, Node, Parser3} ->
                                             parse_until(Parser3,
-                                                        Parser3#dtl_parser.tokens,
+                                                        Parser3#parser.tokens,
                                                         Until, [Node|Nodes]);
                                         Err -> Err
                                     end
@@ -129,13 +131,13 @@ split_token(Src) ->
 %%      provided name.
 -spec find_filter(parser(), dtl_library:name()) ->
     dtl_filter:filter_fun() | nomatch.
-find_filter(#dtl_parser{filters = Filters}, Name) ->
+find_filter(#parser{filters = Filters}, Name) ->
     dtl_library:search_collection(Filters, Name).
 
 -spec find_tag(parser(), dtl_library:name()) ->
     {ok, dtl_library:tag_spec()} | nomatch.
-find_tag(#dtl_parser{tags = Tags}, Name) ->
+find_tag(#parser{tags = Tags}, Name) ->
     dtl_library:search_collection(Tags, Name).
 
-delete_first_token(Parser = #dtl_parser{tokens = [_|Tokens]}) ->
-    Parser#dtl_parser{tokens = Tokens}.
+delete_first_token(Parser = #parser{tokens = [_|Tokens]}) ->
+    Parser#parser{tokens = Tokens}.

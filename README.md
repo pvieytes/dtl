@@ -264,20 +264,19 @@ in the sections below.
 `registered_tags` returns a list of any of the following:
 
 **NodeFunction**: `NodeFunction` is the name of a function that returns
-    a `dtl_node()` which should have its `renderer` field set and record
-    any important information about the node in its `state` field. The
-    renderer function should be either a `fun` object or be specified as
-    a module-function in the form `{Mod, Fun}`.
+    a `dtl_node:tnode()` which should have its `renderer` field set and
+    record any important information about the node in its `state`
+    field. The renderer function should be either a `fun` object or be
+    specified as a module-function in the form `{Mod, Fun}`.
 
     -behaviour(dtl_library).
     -export([registered_filters/0,
              registered_tags/0,
              color_orange/2,
-             render_color_orange/2,
-             thumbnail/2]).
+             render_color_orange/2]).
+
     registered_filters() -> [].
-    regisered_tags() -> [{simple_tag, fish_name},
-                         {simple_tag, thumbnail}].
+    regisered_tags() -> [color_orange].
 
     %% This function extracts the number of repititions from the tag
     %% token and saves this in the new node's state.
@@ -289,43 +288,16 @@ in the sections below.
         N = list_to_integer(binary_to_list(NBin)),
         {Nodes, Parser2} = dtl_parser:parse("endcolor_orange"),
         Parser3 = dtl_parser:delete_first_token(Parser2),
-        {#dtl_node{nodelist = Nodes,
-                   renderer = {?MODULE, render_color_orange},
-                   state = N}, Parser3}.
+        Node = dtl_node:new("color_orange", {?MODULE, render_color_orange}),
+        Node2 = dtl_node:set_nodelist(Node, Nodes),
+        Node3 = dtl_node:set_state(Node2, N),
+        {Node3, Parser3}.
 
     %% Renders the tag contents N times inside an orange block.
     render_color_orange(#dtl_node{nodelist = NodeList, state = N}, Ctx) ->
         ["<div class=\"orange\">",
             [dtl_node:render_list(NodeList) || X <- lists:seq(1, N)],
          "</div>"].
-
-**{simple\_tag, RenderFunction}**: `RenderFunction` is the name of a
-    function that accepts two arguments: One for the positional
-    arguments to the tag and one for the keyword arguments. This
-    function should return a list, binary, or iolist:
-
-    -behaviour(dtl_library).
-    -export([registered_filters/0,
-             registered_tags/0,
-             fish_name/2,
-             thumbnail/2]).
-    registered_filters() -> [].
-    regisered_tags() -> [{simple_tag, fish_name},
-                         {simple_tag, thumbnail}].
-
-    %% This takes no arguments: {% fish_name %} -> "Blue fish".
-    fish_name([], []) ->
-        lists:nth(random:uniform(4), ["One fish", "Two fish",
-                                      "Red fish", "Blue fish"]).
-
-    %% This one takes one positional and one keyword argument:
-    %%     <img src="/static/{% thumbnail "foo" quality=70 %}">
-    thumbnail([Filename], Options) ->
-        Quality = proplists:get_value(quality, Options, 85),
-        %% This returns the path of the thumbnail file relative to the
-        %% static root, generating the new image if needed.
-        {ok, ThumbFile} = thumbnail_server:get_image(Filename, Quality),
-        ThumbFile.
 
 **{inclusion\_tag, TemplateName, ContextFunction}**: TemplateName is the
     name of the template this tag includes. ContextFunction is a
@@ -357,6 +329,16 @@ in the sections below.
         Color = proplists:get_value(color, Options, "#fc0"),
         [{color, Color},
          {title, Title}].
+
+Simple tag is not needed for most cases, where the custom tag can choose
+to simply return a list or binary (see `dtl_node:tnode()` definition).
+Use something like the following for a named simple tag:
+
+    my_simple_tag(Parser, _Token) ->
+        {ok, dtl_node("my_simple_tag", fun (Node, Ctx) ->
+             %% Render ...
+         end, Parser)}.
+
 
 ##8.2. Custom Filters
 

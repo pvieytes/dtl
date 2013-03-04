@@ -27,28 +27,65 @@
 %%      Definitions of core node types (text, variable, etc.).
 -module(dtl_node).
 
--export([new_var/1,
+%% @doc Nodes, the building blocks of templates. Nodes themselves may
+%%      contain lists of other nodes, so template rendering is
+%%      recursive.
+%%
+%%      Nodes with no renderer will not attempt to be rendererd.
+-record(unode, {
+    %% name is for debugging
+    name :: list(),
+    %% Convenient state field. Block tags that consume tokens need this.
+    nodelist = [] :: [tnode()],
+    %% Renderer callback. If not provided, this won't render.
+    renderer :: {atom(), atom()} | fun() | undefined,
+    %% State bucket.
+    state
+}).
+
+-opaque unode() :: #unode{}.
+-type tnode() :: unode() | binary() | list().
+
+-export([name/1,
+         new/1,
+         new/2,
+         new_var/1,
+         nodelist/1,
          render/2,
          render_list/2,
-         render_var/2]).
+         render_var/2,
+         set_nodelist/2,
+         set_renderer/2,
+         set_state/2,
+         state/1]).
+-export_type([tnode/0,
+              unode/0]).
 
--include("dtl.hrl").
+new(Name) -> new(Name, undefined).
+new(Name, Renderer) -> #unode{name = Name, renderer = Renderer}.
 
-%% Prefix with `t' to avoid an confusion with real `node()' types.
--type tnode() :: #dtl_node{} | list() | binary().
--type tnodelist() :: [tnode()].
--export_type([tnode/0, tnodelist/0]).
+name(Node) -> Node#unode.name.
+
+set_renderer(Node, Renderer) -> Node#unode{renderer = Renderer}.
+
+set_state(Node, State) -> Node#unode{state = State}.
+
+state(Node) -> Node#unode.state.
+
+set_nodelist(Node, Nodes) -> Node#unode{nodelist = Nodes}.
+
+nodelist(Node) -> Node#unode.nodelist.
 
 %% @doc Renders a list of nodes.
--spec render_list(tnodelist(), dtl_context:context()) ->
+-spec render_list([tnode()], dtl_context:context()) ->
     {ok, [binary()]}.
 render_list(NodeList, Ctx) ->
     {ok, render_list(NodeList, Ctx, [])}.
 
--spec render_list(tnodelist(), dtl_context:context(), [binary()]) ->
+-spec render_list([tnode()], dtl_context:context(), [binary()]) ->
     [binary()].
 %% Skip no-renderer.
-render_list([#dtl_node{renderer = undefined}|NodeList], Ctx, Bits) ->
+render_list([#unode{renderer = undefined}|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, Bits);
 render_list([Node|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
@@ -56,9 +93,9 @@ render_list([], _Ctx, Bits) -> lists:reverse(Bits).
 
 %% @doc Renders a single node.
 -spec render(tnode(), dtl_context:context()) -> binary().
-render(Node = #dtl_node{renderer = {M, F}}, Ctx) ->
+render(Node = #unode{renderer = {M, F}}, Ctx) ->
     M:F(Node, Ctx);
-render(Node = #dtl_node{renderer = Fun}, Ctx) ->
+render(Node = #unode{renderer = Fun}, Ctx) ->
     Fun(Node, Ctx);
 render(Node, _Ctx) when is_list(Node) -> list_to_binary(Node);
 render(Node, _Ctx) when is_binary(Node) -> Node.
@@ -72,12 +109,12 @@ render(Node, _Ctx) when is_binary(Node) -> Node.
 %% @doc Variable node initializer.
 -spec new_var(dtl_filter:expr()) -> tnode().
 new_var(FilterExpr) ->
-    #dtl_node{renderer = {?MODULE, render_var},
-              state = FilterExpr}.
+    #unode{renderer = {?MODULE, render_var},
+           state = FilterExpr}.
 
 %% @doc Variable node renderer.
 -spec render_var(tnode(), dtl_context:context()) -> binary().
-render_var(#dtl_node{state = FilterExpr}, Ctx) ->
+render_var(#unode{state = FilterExpr}, Ctx) ->
     var_to_binary(dtl_filter:resolve_expr(FilterExpr, Ctx)).
 
 -spec var_to_binary(term()) -> binary().

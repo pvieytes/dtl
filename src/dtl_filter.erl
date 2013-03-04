@@ -24,9 +24,15 @@
 %%      docs for what a filter is ...
 -module(dtl_filter).
 
--include("dtl_compiler.hrl").
+-include("compiler.hrl").
 
--type expr() :: #dtl_filter_expr{}.
+-record(expr, {
+    var :: term(),
+    token :: binary(),
+    filters = [] :: [dtl_filter:filter()]
+}).
+
+-opaque expr() :: #expr{}.
 -type filter() :: {filter_fun(), [filter_arg()]}.
 -type filter_fun() ::{module(), atom()}.
 -type filter_arg() :: {boolean(), term()}.
@@ -75,9 +81,9 @@ parse(Token, Parser) ->
         nomatch -> {undefined, []};
         {match, Matches} -> process_matches(Matches, undefined, [], Parser)
     end,
-    #dtl_filter_expr{token = Token,
-                     var = Var,
-                     filters = Filters}.
+    #expr{token = Token,
+          var = Var,
+          filters = Filters}.
 
 -spec process_matches([list(binary())], term(), [filter()],
         dtl_parser:parser()) ->
@@ -149,7 +155,7 @@ process_var(Var) ->
     string:tokens(binary_to_list(Var), ?VARIABLE_SEP).
 
 -spec resolve_expr(expr(), dtl_context:context()) -> term().
-resolve_expr(#dtl_filter_expr{var = Var, filters = Filters}, Ctx) ->
+resolve_expr(#expr{var = Var, filters = Filters}, Ctx) ->
     resolve_expr_filters(Filters, resolve_var(Var, Ctx), Ctx).
 
 resolve_expr_filters([{{Mod, Fun}, Args}|Filters], Var, Ctx) ->

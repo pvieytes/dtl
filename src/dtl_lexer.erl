@@ -23,7 +23,7 @@
 %% @doc Template tokenizing functions.
 -module(dtl_lexer).
 
--include("dtl_compiler.hrl").
+-include("compiler.hrl").
 
 -type token_type() :: ?TOKEN_TEXT
                     | ?TOKEN_VAR

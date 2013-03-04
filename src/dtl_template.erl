@@ -27,9 +27,12 @@
 -export([new/1,
          render/2]).
 
--include("dtl.hrl").
 
--type template() :: #dtl_tpl{}.
+%% @doc Templates, this program's core data type. These are the compiled
+%%      representation of string templates and all template rendering
+%%      occurs via an internal node list.
+-record(tpl, {nodelist = [] :: [dtl_node:tnode()]}).
+-opaque template() :: #tpl{}.
 -export_type([template/0]).
 
 %% @doc Compiles the provided template source, returning the compiled
@@ -37,22 +40,22 @@
 %%      module.
 -spec new(binary()) -> template().
 new(Str) ->
-    #dtl_tpl{nodelist = compile_string(Str)}.
+    #tpl{nodelist = compile_string(Str)}.
 
 %% @doc Renders the provided template with the context (stub).
 -spec render(template(), dtl_context:context()) ->
     {ok, binary(), dtl_context:context()} | {error, atom()}.
-render(#dtl_tpl{nodelist = NodeList},
-       Ctx = #dtl_ctx{render_context = RenderCtx}) ->
+render(#tpl{nodelist = NodeList}, Ctx) ->
     %% Push onto the render context: This is so that {% assign %} and
     %% similar tags can modify the context safely.
-    Ctx2 = Ctx#dtl_ctx{render_context = dtl_context:push(RenderCtx)},
+    RenderCtx = dtl_context:render_context(Ctx),
+    Ctx2 = dtl_context:set_render_context(Ctx, dtl_context:push(RenderCtx)),
     {ok, OutList} = dtl_node:render_list(NodeList, Ctx2),
     %% No need to pop the render context, just reuse the original one.
     {ok, iolist_to_binary(OutList), Ctx}.
 
 %% @doc Compile a string to a nodelist.
--spec compile_string(binary()) -> dtl_node:tnodelist().
+-spec compile_string(binary()) -> [dtl_node:tnode()].
 compile_string(Str) ->
     {LexerMod, ParserMod} = get_compiler(dtl:setting(debug)),
     Tokens = LexerMod:tokenize(Str),

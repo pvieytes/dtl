@@ -61,8 +61,6 @@
          find_template/2,
          select_template/1]).
 
--include("dtl.hrl").
-
 %% @doc Finds a template and compiles it, returning the compiled
 %%      representation.
 -spec get_template(list()) ->

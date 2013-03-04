@@ -28,8 +28,6 @@
          setting/1,
          setting/2]).
 
--include("dtl.hrl").
-
 %% @doc Creates and renders the template with the provided name.
 -spec render(list()) -> {ok, binary()} | {error, atom()}.
 render(Name) -> render(Name, dtl_context:new()).

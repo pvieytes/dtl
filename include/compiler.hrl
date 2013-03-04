@@ -45,15 +45,3 @@
 
 -define(FILTER_SEP, "|").
 -define(FILTER_ARG_SEP, ":").
-
--record(dtl_parser, {
-    tokens :: [dtl_lexer:token()],
-    tags :: dict(),
-    filters :: dict()
-}).
-
--record(dtl_filter_expr, {
-    var :: term(),
-    token :: binary(),
-    filters = [] :: [dtl_filter:filter()]
-}).

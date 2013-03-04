@@ -23,7 +23,7 @@
 %% @doc Tests for the production lexer.
 -module(dtl_lexer_tests).
 
--include("dtl_compiler.hrl").
+-include("compiler.hrl").
 
 -include_lib("eunit/include/eunit.hrl").
 
