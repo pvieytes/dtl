@@ -47,6 +47,8 @@ get-deps: rebar.config
 deps: get-deps
 	$(REBAR) compile
 
+MAIN_ERLS = $(shell find src -name '*.erl' -not -name '*tests.erl')
+
 DIALYZER ?= dialyzer
 DIALYZER_FLAGS ?= -Wno_opaque
 
@@ -86,7 +88,7 @@ plt:
 		--apps kernel stdlib
 
 dialyze:
-	$(DIALYZER) $(DIALYZER_FLAGS) \
+	$(DIALYZER) $(DIALYZER_FLAGS) --apps $(DEPS)/*/ebin \
 		--src $(MAIN_ERLS) --plt .$(PROGRAM).plt --no_native
 
 .PHONY: clean clean-pre ct-clean doc-clean check ct ct-pre doc
