@@ -2,11 +2,11 @@
 
 A full-featured port of the Django template engine to Erlang.
 
-    NOTE: While this template engine's mechanics are in a working state, I've
-          yet to write most of the basic node renderers.
+***NOTE:*** _The template engine is in a working but still alpha-state,
+particularly until error handling is cleaned up.
 
-          This notice will be removed once I've made the first tagged release
-          and the project is in a truly usable state.
+The custom tag and filter API works as do all rendering and lookup
+functions. Only 
 
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
@@ -14,9 +14,9 @@ A full-featured port of the Django template engine to Erlang.
 4. [Basic Usage](#4-basic-usage)
 5. [Syntax](#5-syntax)
 6. [Context and Context Processors](#6-context-and-context-processors)
-7. [Loader Modules](#7-loader-modules)
-8. [Custom Filters](#8-custom-filters)
-9. [Custom Tags](#9-custom-tags)
+7. [Built-in Tags and Filters](#7)
+8. [Loader Modules](#7-loader-modules)
+9. [Custom Tags and Filters](#8-custom-tags-and-filters)
 10. [Troubleshooting](#10-troubleshooting)
 11. [FAQ](#11-faq)
 12. [Support/Getting Help](#12-supportgetting-help)
@@ -119,8 +119,8 @@ for DTL tests.
 
 ##4. Basic usage
 
-See "5. Context" for information on setting context variables in your
-templates, and "6. Loader Modules" for information on where to store
+See "6. Context" for information on setting context variables in your
+templates, and "8. Loader Modules" for information on where to store
 your template files.
 
 Render a template:
@@ -193,7 +193,7 @@ Context processors are specified in application config.
 Now, a template could access `time` and `date` variables.
 
 
-##7. Loader Modules
+##8. Loader Modules
 
 DTL comes with two template loader modules, which are described here:
 
@@ -251,7 +251,7 @@ copy a template from a web service (!):
         end.
 
 
-##8. Custom Tags and Filters
+##9. Custom Tags and Filters
 
 Custom tags and filters are defined in a "Library," which is a simple
 callback module that implements the `dtl_library` behaviour. A library
@@ -259,15 +259,13 @@ simply defines `registered_tags/0` and `registered_filters/0`, each of
 which return a list of function names, the likes of which are described
 in the sections below.
 
-##8.1. Custom Tags
+##9.1. Custom Tags
 
 `registered_tags` returns a list of any of the following:
 
 **NodeFunction**: `NodeFunction` is the name of a function that returns
-    a `dtl_node:tnode()` which should have its `renderer` field set and
-    record any important information about the node in its `state`
-    field. The renderer function should be either a `fun` object or be
-    specified as a module-function in the form `{Mod, Fun}`.
+    a `dtl_node:tnode()`. This may be a `dtl_node:unode()`, a list, or a
+    binary.
 
     -behaviour(dtl_library).
     -export([registered_filters/0,
@@ -340,7 +338,7 @@ Use something like the following for a named simple tag:
          end, Parser)}.
 
 
-##8.2. Custom Filters
+##9.2. Custom Filters
 
 Custom filters are functions that can accept a list of colon-separated
 arguments. They must return a list, binary, or iolist.
@@ -367,7 +365,7 @@ arguments. They must return a list, binary, or iolist.
 
 ##10. Troubleshooting
 
-Empty.
+Please report issues at https://github.com/oinksoft/dtl/issues
 
 
 ##11. FAQ
