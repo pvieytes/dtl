@@ -197,11 +197,103 @@ Now, a template could access `time` and `date` variables.
 
 ##7. Built-in Tags and Filters
 
-Tags: `load`
+The target is to implement all default template tags and filters. Below are tables showing the current development status of these items.
 
-Filters: `addslashes`, `capfirst`, `lower`, `upper`.
+Documentation on how to use these tags and filters can be found at
+https://docs.djangoproject.com/en/dev/ref/templates/builtins/
 
-Target: https://docs.djangoproject.com/en/dev/ref/templates/builtins/
+
+###7.1 Tags
+
+|Name|Implemented|
+|`autoescape`|No|
+|`block`|No|
+|`comment`|Yes|
+|`csrf_token`|No|
+|`cycle`|No|
+|`debug`|No|
+|`extends`|No|
+|`filter`|No|
+|`firstof`|No|
+|`for`|No|
+|`for ... empty`|No|
+|`if`|No|
+|`ifchanged`|No|
+|`ifequal`|No|
+|`ifnotequal`|No|
+|`include`|No|
+|`load`|Yes|
+|`now`|No|
+|`regroup`|No|
+|`spaceless`|No|
+|`ssi`|No|
+|`templatetag`|No|
+|`url`|No|
+|`verbatim`|Yes|
+|`widthratio`|No|
+|`with`|No|
+
+
+###7.2 Filters
+
+|Name|Implemented|
+|`add`|No|
+|`addslashes`|Yes|
+|`capfirst`|Yes|
+|`center`|No|
+|`cut`|No|
+|`date`|No|
+|`default`|No|
+|`default_if_none`|No|
+|`dictsort`|No|
+|`dictsortreversed`|No|
+|`divisibleby`|No|
+|`escape`|No|
+|`escapejs`|No|
+|`filesizeformat`|No|
+|`first`|No|
+|`fix_ampersands`|No|
+|`floatformat`|No|
+|`force_escape`|No|
+|`get_digit`|No|
+|`iriencode`|No|
+|`join`|No|
+|`last`|No|
+|`length`|No|
+|`length_is`|No|
+|`linebreaks`|No|
+|`linebreaksbr`|No|
+|`linenumbers`|No|
+|`ljust`|No|
+|`lower`|Yes|
+|`make_list`|No|
+|`phone2numeric`|No|
+|`pluralize`|No|
+|`pprint`|No|
+|`random`|No|
+|`removetags`|No|
+|`rjust`|No|
+|`safe`|No|
+|`safeseq`|No|
+|`slice`|No|
+|`slugify`|No|
+|`stringformat`|No|
+|`striptags`|No|
+|`time`|No|
+|`timesince`|No|
+|`timeuntil`|No|
+|`title`|No|
+|`truncatechars`|No|
+|`truncatewords`|No|
+|`truncatewords_html`|No|
+|`unordered_list`|No|
+|`upper`|Yes|
+|`urlencode`|No|
+|`urlize`|No|
+|`urlizetrunc`|No|
+|`wordcount`|No|
+|`wordwrap`|No|
+|`yesno`|No|
 
 TODO: Replace this with chart including tags and filters not yet
 implemented.
