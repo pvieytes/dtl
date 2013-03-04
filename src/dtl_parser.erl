@@ -29,6 +29,7 @@
 -type parser() :: #dtl_parser{}.
 
 -export([add_library/2,
+         delete_first_token/1,
          find_filter/2,
          new/1,
          parse/1,
@@ -135,3 +136,6 @@ find_filter(#dtl_parser{filters = Filters}, Name) ->
     {ok, dtl_library:tag_spec()} | nomatch.
 find_tag(#dtl_parser{tags = Tags}, Name) ->
     dtl_library:search_collection(Tags, Name).
+
+delete_first_token(Parser = #dtl_parser{tokens = [_|Tokens]}) ->
+    Parser#dtl_parser{tokens = Tokens}.

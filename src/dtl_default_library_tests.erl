@@ -28,23 +28,46 @@
 -export([registered_filters/0,
          registered_tags/0]).
 
--export([make_cat/1]).
+-export([make_cat/1,
+         wc/2,
+         wc_render/2]).
 
+-include("dtl.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
 load_tag_test_() ->
     dtl_tests:compare_templates([
-        {<<"Cat">>, <<"{% load dtl_default_library_tests %}{{ dog|make_cat }}">>}
-    ], dtl_context:new([
-        {dog, <<"Dog">>}
-    ])).
+        {Out, <<"{% load dtl_default_library_tests %}", In/binary>>}
+            || {Out, In} <- [{<<"Cat">>, <<"{{ dog|make_cat }}">>},
+                             {<<"2">>, <<"{% wc %} Two words {% endwc %}">>}]
+        ], dtl_context:new([{dog, <<"Dog">>}])).
 
 %% dtl_library.
 registered_filters() -> [make_cat].
-registered_tags() -> [].
+registered_tags() -> [wc].
 
 %%
 %% Filters
 %%
 
 make_cat(_) -> <<"Cat">>.
+
+%%
+%% Tags
+%%
+wc(Parser, _Token) ->
+    {ok, Nodes, Parser2} = dtl_parser:parse(Parser, [endwc]),
+    Node = #dtl_node{name = "wc",
+                     nodelists = [Nodes],
+                     renderer = {?MODULE, wc_render}},
+    {ok, Node, dtl_parser:delete_first_token(Parser2)}.
+
+wc_render(Node, Ctx) ->
+    [Nodes] = Node#dtl_node.nodelists,
+    Out = dtl_node:render(Nodes, Ctx),
+    In = binary_to_list(iolist_to_binary(Out)),
+    Wc = case re:run(In, "(?:^|\\b)\\w+(?:\\b|$)", [global]) of
+        nomatch -> 0;
+        {match, Ms} -> length(Ms)
+    end,
+    list_to_binary(integer_to_list(Wc)).
