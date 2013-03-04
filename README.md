@@ -116,8 +116,9 @@ for DTL tests.
 
 ##4. Basic usage
 
-See "6. Context" for information on setting context variables in your
-templates, and "8. Loader Modules" for information on where to store
+See [6. Context and Context Processors](#6-context-and-context-processors)
+for information on setting context variables in your templates, and
+[8. Loader Modules](#8-loader-modules) for information on where to store
 your template files.
 
 Render a template:
@@ -133,9 +134,9 @@ set, and render it:
     Source = "My name is {{ name }}.",
     {ok, Tpl} = dtl_template:new(Source),
     Ctx = dtl_context:new([
-        {name, "Thomas"}
+        {name, "Lawrence"}
     ]),
-    {ok, <<"My name is Thomas">>} = dtl_template:render(Tpl, Ctx).
+    {ok, <<"My name is Lawrence">>} = dtl_template:render(Tpl, Ctx).
 
 Find a template and render it:
 
