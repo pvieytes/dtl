@@ -44,6 +44,17 @@ rebar.config:
 and run `rebar get-deps`, then `rebar compile`. Refer to the [rebar
 documentation](https://github.com/basho/rebar) if this is unclear.
 
+The `dtl` application must be started for the engine to work at all.
+Include this in your application so that it is run before you use `dtl`:
+
+    `ok = application:start(dtl).`
+
+Right now this might seem funny because DTL is mostly a library
+application, but it is needed for application config to work. It also
+allows DTL to have some optimizations in the future via its own
+services.
+
+
 ##3. Configuration
 
 These are the application-wide environment variables. Set them like you
