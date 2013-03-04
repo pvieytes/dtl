@@ -27,10 +27,9 @@
 -export([new/1,
          render/2]).
 
-
-%% @doc Templates, this program's core data type. These are the compiled
-%%      representation of string templates and all template rendering
-%%      occurs via an internal node list.
+%% Templates, this program's core data type. These are the compiled
+%% representation of string templates and all template rendering occurs
+%% via an internal node list.
 -record(tpl, {nodelist = [] :: [dtl_node:tnode()]}).
 -opaque template() :: #tpl{}.
 -export_type([template/0]).

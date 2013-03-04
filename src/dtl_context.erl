@@ -42,10 +42,9 @@
          set_render_context/2,
          update/2]).
 
-%% @doc Contexts. These maintain a stack of states pushed by different
-%%      parts of the program, so that updates to the context data
-%%      consist of pushing to the stack rather than destroying existing
-%%      data.
+%% Contexts. These maintain a stack of states pushed by different parts
+%% of the program, so that updates to the context data consist of
+%% pushing to the stack rather than destroying existing data.
 -record(ctx, {
     stack = [] :: [dict()],
     autoescape = true :: boolean(),

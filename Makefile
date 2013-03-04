@@ -77,9 +77,8 @@ ct: ct-clean program
 	$(CT_RUN) $(EFLAGS) $(CT_FLAGS) -pa ebin \
 		-I include -dir test -logdir logs -suite $(CT_SUITES)
 
-doc: $(MAIN_ERLS)
+doc:
 	mkdir -p doc
-	touch doc
 	./edoc.escript
 
 plt:
@@ -90,4 +89,4 @@ dialyze:
 	$(DIALYZER) $(DIALYZER_FLAGS) \
 		--src $(MAIN_ERLS) --plt .$(PROGRAM).plt --no_native
 
-.PHONY: clean clean-pre ct-clean doc-clean check ct ct-pre
+.PHONY: clean clean-pre ct-clean doc-clean check ct ct-pre doc
