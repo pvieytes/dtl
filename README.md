@@ -296,8 +296,6 @@ Name|Implemented
 `wordwrap`|No
 `yesno`|No
 
-TODO: Replace this with chart including tags and filters not yet
-implemented.
 
 ##8. Loader Modules
 
