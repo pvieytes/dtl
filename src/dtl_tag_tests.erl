@@ -23,4 +23,40 @@
 %% @doc Test template tag mechanisms.
 -module(dtl_tag_tests).
 
+-behaviour(dtl_library).
+
+-export([registered_filters/0,
+         registered_tags/0]).
+
+%% Tags
+-export([simple/2,
+         simple_list/2,
+         simple_named/2]).
+
 -include_lib("eunit/include/eunit.hrl").
+
+registered_filters() -> [].
+registered_tags() -> [simple,
+                      simple_list,
+                      simple_named].
+
+simple_tags_test_() ->
+        dtl_tests:compare_templates([{Out, <<"{% load dtl_tag_tests %}", In/binary>>}
+            || {Out, In} <- [{<<"Simple">>, <<"{% simple %}">>},
+                             {<<"List">>, <<"{% simple_list %}">>},
+                             {<<"Named `simple_named'">>, <<"{% simple_named %}">>}]
+        ], dtl_context:new()).
+
+%%
+%% Tags
+%%
+
+simple(Parser, _) -> {ok, <<"Simple">>, Parser}.
+
+simple_list(Parser, _) -> {ok, "List", Parser}.
+
+simple_named(Parser, _Token) ->
+    {ok, dtl_node:new("simple_named", fun (Node, _Ctx) ->
+        Name = list_to_binary(dtl_node:name(Node)),
+        <<"Named `", Name/binary, "'">>
+     end), Parser}.
