@@ -392,9 +392,11 @@ in the sections below.
         {Node3, Parser3}.
 
     %% Renders the tag contents N times inside an orange block.
-    render_color_orange(#dtl_node{nodelist = NodeList, state = N}, Ctx) ->
+    render_color_orange(Node, Ctx) ->
+        N = dtl_node:state(Node),
+        Nodes = dtl_node:nodelist(Node),
         ["<div class=\"orange\">",
-            [dtl_node:render_list(NodeList) || X <- lists:seq(1, N)],
+            [dtl_node:render_list(Nodes) || X <- lists:seq(1, N)],
          "</div>"].
 
 `{{dtl_tag, inclusion_tag, TemplateName}, ContextFunction}`: This is an
