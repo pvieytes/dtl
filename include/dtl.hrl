@@ -42,8 +42,12 @@
 %% @doc Nodes, the building blocks of templates. Nodes themselves may
 %%      contain lists of other nodes, so template rendering is
 %%      recursive.
+%%
+%%      Nodes with no renderer will not attempt to be rendererd.
 -record(dtl_node, {
     nodelists = [] :: [dtl_node:tnodelist()],
-    renderer :: {atom(), atom()} | fun(),
-    state
+    renderer :: {atom(), atom()} | fun() | undefined,
+    state,
+    %% name is for debugging
+    name :: list()
 }).

@@ -23,4 +23,28 @@
 %% @doc Default template tag and filter tests.
 -module(dtl_default_library_tests).
 
+-behaviour(dtl_library).
+
+-export([registered_filters/0,
+         registered_tags/0]).
+
+-export([make_cat/1]).
+
 -include_lib("eunit/include/eunit.hrl").
+
+load_tag_test_() ->
+    dtl_tests:compare_templates([
+        {<<"Cat">>, <<"{% load dtl_default_library_tests %}{{ dog|make_cat }}">>}
+    ], dtl_context:new([
+        {dog, <<"Dog">>}
+    ])).
+
+%% dtl_library.
+registered_filters() -> [make_cat].
+registered_tags() -> [].
+
+%%
+%% Filters
+%%
+
+make_cat(_) -> <<"Cat">>.

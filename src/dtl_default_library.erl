@@ -27,16 +27,47 @@
 -export([registered_tags/0,
          registered_filters/0]).
 
-%% Filters.
+-include("dtl.hrl").
+
+%% Filters
 -export([lower/1,
          upper/1]).
+%% Tags
+-export([load/2]).
 
-registered_tags() -> [].
+registered_tags() -> [load].
 registered_filters() -> [lower,
                          upper].
 
+%%
+%% Filters
+%%
+-spec lower(binary()) -> binary().
 lower(Bin) ->
     list_to_binary(string:to_lower(binary_to_list(Bin))).
 
+-spec upper(binary()) -> binary().
 upper(Bin) ->
     list_to_binary(string:to_upper(binary_to_list(Bin))).
+
+%%
+%% Tags
+
+%% Load tag: `{% load library_name %}'
+%%   Where `library_name' is a module implementing the `dtl_library'
+%%   interface.
+-spec load(dtl_parser:parser(), dtl_lexer:token()) ->
+    {ok, dtl_node:tnode(), dtl_parser:parser()}
+        | {error, missing_library | load_tag_syntax_error}.
+load(Parser, {_Type, Token}) ->
+    case dtl_parser:split_token(Token) of
+        [<<"load">>, LibBin] ->
+            Node = #dtl_node{name = "load"},
+            case dtl_string:safe_list_to_atom(binary_to_list(LibBin)) of
+                error -> {error, missing_library};
+                Lib ->
+                    Parser2 = dtl_parser:add_library(Parser, Lib),
+                    {ok, Node, Parser2}
+            end;
+        _ -> {error, load_tag_syntax_error}
+    end.

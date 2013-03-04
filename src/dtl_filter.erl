@@ -150,14 +150,19 @@ process_var(Var) ->
 
 -spec resolve_expr(expr(), dtl_context:context()) -> term().
 resolve_expr(#dtl_filter_expr{var = Var, filters = Filters}, Ctx) ->
-    lists:foldl(fun ({{Mod, Fun}, Args}, Var2) ->
-        RealArgs = case Args of
-            [] -> [Var2];
-            [{true, Arg}] -> [Var2, resolve_lookup(Arg, Ctx)];
-            [{false, Arg}] -> [Var2, Arg]
-        end,
-        apply(Mod, Fun, RealArgs)
-    end, resolve_var(Var, Ctx), Filters).
+    resolve_expr_filters(Filters, resolve_var(Var, Ctx), Ctx).
+
+resolve_expr_filters([{{Mod, Fun}, Args}|Filters], Var, Ctx) ->
+    RealArgs = case Args of
+        [] -> [Var];
+        [{true, Arg}] -> [Var, resolve_lookup(Arg, Ctx)];
+        [{false, Arg}] -> [Var, Arg]
+    end,
+    case apply(Mod, Fun, RealArgs) of
+        {error, Reason} -> {error, Reason};
+        Var2 -> resolve_expr_filters(Filters, Var2, Ctx)
+    end;
+resolve_expr_filters([], Var, _Ctx) -> Var.
 
 -spec resolve_var(term(), dtl_context:context()) -> binary().
 resolve_var(Lookup = [[_|_]|_], Ctx) -> resolve_lookup(Lookup, Ctx);

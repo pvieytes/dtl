@@ -47,6 +47,9 @@ render_list(NodeList, Ctx) ->
 
 -spec render_list(tnodelist(), dtl_context:context(), [binary()]) ->
     [binary()].
+%% Skip no-renderer.
+render_list([#dtl_node{renderer = undefined}|NodeList], Ctx, Bits) ->
+    render_list(NodeList, Ctx, Bits);
 render_list([Node|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
 render_list([], _Ctx, Bits) -> lists:reverse(Bits).
