@@ -159,7 +159,7 @@ Render the first of several found templates:
 
 Template syntax is identical to that of the [Django template
 language](https://docs.djangoproject.com/en/dev/topics/templates/).
-Please report any observable differences.
+Please report any observable differences as bugs.
 
 
 ##6. Context and Context Processors
@@ -455,15 +455,11 @@ arguments. They must return a list, binary, or iolist.
     registered_filters() -> [reverso].
     regisered_tags() -> [].
 
-    %% Reverses its filter:
-    %%   {{ "Cat"|reverso }} -> "taC"
-    %%
-    %% _Args is [], because this should never receive arguments.
-    reverse(Text, []) ->
+    %% @doc Reverses its input: {{ "Cat"|reverso }} -> "taC".
+    reverso(Bin) ->
         list_to_binary(lists:reverse(binary_to_list(Text))).
 
-    %% Adds to the first number:
-    %%     {{ 1|add:2 }}
+    %% @doc Adds to the first number: {{ 1|add:2 }} -> "3".
     add(X, [Y]) -> integer_to_list(X + Y).
 
 
