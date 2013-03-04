@@ -2,11 +2,13 @@
 
 A full-featured port of the Django template engine to Erlang.
 
-***NOTE:*** _The template engine is in a working but still alpha-state,
-particularly until error handling is cleaned up.
+**Warning:** The template engine is in a working but still "alpha"
+state, particularly until error handling is cleaned up.
 
 The custom tag and filter API works as do all rendering and lookup
-functions. Only 
+functions. See [Built-in Tags and Filters](#7-built-in-tags-and-filters)
+for an up-to-date table documenting tag and filter compatibility with
+the Django defaults.
 
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
@@ -14,9 +16,9 @@ functions. Only
 4. [Basic Usage](#4-basic-usage)
 5. [Syntax](#5-syntax)
 6. [Context and Context Processors](#6-context-and-context-processors)
-7. [Built-in Tags and Filters](#7)
-8. [Loader Modules](#7-loader-modules)
-9. [Custom Tags and Filters](#8-custom-tags-and-filters)
+7. [Built-in Tags and Filters](#7-built-in-tags-and-filters)
+8. [Loader Modules](#8-loader-modules)
+9. [Custom Tags and Filters](#9-custom-tags-and-filters)
 10. [Troubleshooting](#10-troubleshooting)
 11. [FAQ](#11-faq)
 12. [Support/Getting Help](#12-supportgetting-help)
@@ -192,6 +194,16 @@ Context processors are specified in application config.
 
 Now, a template could access `time` and `date` variables.
 
+
+##7. Built-in Tags and Filters
+
+Tags: "load"
+Filters: "upper", "lower"
+
+Target: https://docs.djangoproject.com/en/dev/ref/templates/builtins/
+
+TODO: Replace this with chart including tags and filters not yet
+implemented.
 
 ##8. Loader Modules
 
