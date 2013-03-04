@@ -449,9 +449,11 @@ arguments. They must return a list, binary, or iolist.
 
     -behaviour(dtl_library).
     -export([registered_filters/0,
-             registered_tags/0,
-             add/2,
-             reverso/2]).
+             registered_tags/0]).
+    %% Filters.
+    -export([add/2,
+             reverso/1]).
+
     registered_filters() -> [reverso].
     regisered_tags() -> [].
 
@@ -470,7 +472,34 @@ Please report issues at https://github.com/oinksoft/dtl/issues
 
 ##11. FAQ
 
-Empty.
+1.  _What's the point of this library when
+    [ErlyDTL](https://github.com/evanmiller/erlydtl) already exists?_
+
+    ErlyDTL is an excellent library. It generates **fast** templates and
+    is more than adequate for basic websites that do not need everything
+    Django's templates provide.
+
+    I was dismayed to find ErlyDTL to be lacking many features I
+    consider essential in the Django template engine, particularly the
+    ability for template tags to manipulate the parser, and the rather
+    standard mapping of an HTML file to a real template with no
+    compilation involved.
+
+    After investigating ErlyDTL thoroughly, I found its design quite
+    rigid with the default tempatle tags hard-coded, loading template
+    tag libraries requiring application configuration, and verbose
+    template names due to the requirement that each HTML template
+    generate an Erlang module. It seemed like a better idea to chart my
+    own path rather than to suggest some rewrite of ErlyDTL.
+
+    This project aims to be simple and readable before anything else,
+    providing an API that is very similar to that of `django.template`.
+    All template tags and filters, except for `{% verbatim %}` and
+    `{% comment %}`, both of which are optimized away in the lexer, will
+    be implemented using the custom tag/filter APIs. It probably won't
+    be as fast as ErlyDTL (I haven't benchmarked this at all), but I
+    believe its design lends itself better to template caching, should
+    applications require it.
 
 
 ##12. Support/Getting Help
