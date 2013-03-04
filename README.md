@@ -385,11 +385,10 @@ in the sections below.
         [<<NBin/binary>>] = dtl_token:split_contents(Token),
         N = list_to_integer(binary_to_list(NBin)),
         {Nodes, Parser2} = dtl_parser:parse("endcolor_orange"),
-        Parser3 = dtl_parser:delete_first_token(Parser2),
         Node = dtl_node:new("color_orange", {?MODULE, render_color_orange}),
         Node2 = dtl_node:set_nodelist(Node, Nodes),
         Node3 = dtl_node:set_state(Node2, N),
-        {Node3, Parser3}.
+        {Node3, dtl_parser:delete_first_token(Parser2)}.
 
     %% Renders the tag contents N times inside an orange block.
     render_color_orange(Node, Ctx) ->
