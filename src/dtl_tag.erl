@@ -30,7 +30,9 @@
 -type tag() :: {module(), dtl_library:name()}
              | {{module(), atom()}, {module(), dtl_library:name()}, term()}.
 
--export([run/3]).
+-export([inclusion_tag/5,
+         render_inclusion_tag/2,
+         run/3]).
 -export_type([tag/0]).
 
 -spec run(tag(), dtl_parser:parser(), dtl_lexer:token()) ->
@@ -39,3 +41,21 @@ run({{WrapMod, WrapFun, Arg}, {Mod, Fun}}, Parser, Token) ->
     WrapMod:WrapFun(Arg, Mod, Fun, Parser, Token);
 run({Mod, Fun}, Parser, Token) ->
     Mod:Fun(Parser, Token).
+
+inclusion_tag(Name, Mod, Fun, Parser, _Token) ->
+    %% TODO: Break up the token into args/options.
+    Args = Opts = [],
+    Node = dtl_node:new("inclusion_tag", {?MODULE, render_inclusion_tag}),
+    {ok, Tpl} = case Name of
+        [[_|_]|_] -> dtl_loader:select_template(Name);
+        _ -> dtl_loader:get_template(Name)
+    end,
+    Node2 = dtl_node:set_nodelist(Node, dtl_template:nodelist(Tpl)),
+    Node3 = dtl_node:set_state(Node2, {Mod, Fun, Args, Opts}),
+    {ok, Node3, Parser}.
+
+render_inclusion_tag(Node, Ctx) ->
+    {Mod, Fun, Args, Opts} = dtl_node:state(Node),
+    Ctx2 = dtl_context:update(Ctx, Mod:Fun(Args, Opts)),
+    {ok, Bin} = dtl_node:render_list(dtl_node:nodelist(Node), Ctx2),
+    Bin.

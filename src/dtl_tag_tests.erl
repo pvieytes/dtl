@@ -31,21 +31,28 @@
 %% Tags
 -export([simple/2,
          simple_list/2,
-         simple_named/2]).
+         simple_named/2,
+         show_o/2]).
 
 -include_lib("eunit/include/eunit.hrl").
 
 registered_filters() -> [].
 registered_tags() -> [simple,
                       simple_list,
-                      simple_named].
+                      simple_named,
+                      {{dtl_tag, inclusion_tag, "included.html"}, show_o}].
 
 simple_tags_test_() ->
-        dtl_tests:compare_templates([{Out, <<"{% load dtl_tag_tests %}", In/binary>>}
-            || {Out, In} <- [{<<"Simple">>, <<"{% simple %}">>},
-                             {<<"List">>, <<"{% simple_list %}">>},
-                             {<<"Named `simple_named'">>, <<"{% simple_named %}">>}]
-        ], dtl_context:new()).
+    dtl_tests:compare_templates([{Out, <<"{% load dtl_tag_tests %}", In/binary>>}
+        || {Out, In} <- [{<<"Simple">>, <<"{% simple %}">>},
+                         {<<"List">>, <<"{% simple_list %}">>},
+                         {<<"Named `simple_named'">>, <<"{% simple_named %}">>}]
+    ], dtl_context:new()).
+
+inclusion_tag_test_() ->
+    dtl_tests:compare_templates([{Out, <<"{% load dtl_tag_tests %}", In/binary>>}
+        || {Out, In} <- [{<<"O!\n">>, <<"{% show_o %}">>}]
+    ], dtl_context:new()).
 
 %%
 %% Tags
@@ -60,3 +67,5 @@ simple_named(Parser, _Token) ->
         Name = list_to_binary(dtl_node:name(Node)),
         <<"Named `", Name/binary, "'">>
      end), Parser}.
+
+show_o([], []) -> [{o, <<"O!">>}].

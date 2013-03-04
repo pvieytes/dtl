@@ -70,7 +70,7 @@ parse(Parse) -> parse(Parse, []).
 %%      empty_block_tag: If the parser encounters a block tag with no
 %%          contents.
 %%
-%%      unknown_tag: If an unregistered block tag is encountered.
+%%      {unknown_tag, Name}: If an unregistered block tag is encountered.
 -spec parse(parser(), [atom()]) ->
     {ok, [dtl_node:tnode()], parser()} | {error, atom()}.
 parse(Parser = #parser{tokens = Tokens}, Until) ->
@@ -94,7 +94,7 @@ parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens],
         [] -> {error, empty_block_tag};
         [RawName|_] ->
             case dtl_string:safe_list_to_atom(binary_to_list(RawName)) of
-                error -> {error, unknown_tag};
+                error -> {error, {unknown_tag, RawName}};
                 Name ->
                     case lists:member(Name, Until) of
                         true ->

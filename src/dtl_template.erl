@@ -25,6 +25,7 @@
 -module(dtl_template).
 
 -export([new/1,
+         nodelist/1,
          render/2]).
 
 %% Templates, this program's core data type. These are the compiled
@@ -66,3 +67,5 @@ compile_string(Str) ->
 -spec get_compiler(boolean()) -> {atom(), atom()}.
 get_compiler(true) -> {dtl_debug_lexer, dtl_debug_parser};
 get_compiler(false) -> {dtl_lexer, dtl_parser}.
+
+nodelist(Tpl) -> Tpl#tpl.nodelist.

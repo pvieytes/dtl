@@ -360,9 +360,9 @@ in the sections below.
 
 ##9.1. Custom Tags
 
-`registered_tags` returns a list of any of the following:
+`registered_tags` returns a list of `dtl_library:tag_spec()`:
 
-**NodeFunction**: `NodeFunction` is the name of a function that returns
+`NodeFunction`: `NodeFunction` is the name of a function that returns
     a `dtl_node:tnode()`. This may be a `dtl_node:unode()`, a list, or a
     binary.
 
@@ -396,18 +396,21 @@ in the sections below.
             [dtl_node:render_list(NodeList) || X <- lists:seq(1, N)],
          "</div>"].
 
-**{inclusion\_tag, TemplateName, ContextFunction}**: TemplateName is the
-    name of the template this tag includes. ContextFunction is a
-    function that can inject data into this template by returning a
-    `dtl_context()` or a proplist. It receives any arguments passed to
-    the inclusion tag as positional and keyword argument lists.
+`{{dtl_tag, inclusion_tag, TemplateName}, ContextFunction}`: This is an
+    example of a tag wrapper, which may be provided as a `{module(),
+    tuple(), term()}` triple as the first element of a tag spec. For
+    `inclusion_tag`, TemplateName is the name of the template this tag
+    includes. ContextFunction is a function that can inject data into
+    this template by returning a `dtl_context()` or a proplist. It
+    receives any arguments passed to the inclusion tag as positional and
+    keyword argument lists.
 
     -behaviour(dtl_library).
     -export([registered_filters/0,
              registered_tags/0,
              pretty_box/2]).
     registered_filters() -> [].
-    regisered_tags() -> [{inclusion_tag, "pretty-box.html", pretty_box}].
+    regisered_tags() -> [{{dtl_tag, inclusion_tag, "pretty-box.html"}, pretty_box}].
 
     %%%% pretty-box.html:
     %% <div class="so" style="color: {{ color }}">

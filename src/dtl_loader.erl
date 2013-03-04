@@ -74,7 +74,7 @@ get_template(Name) ->
 %% @doc Returns the first of several requested templates that a loader
 %%      module finds, in its compiled representation.
 -spec select_template([list()]) ->
-    dtl_template:template() | {error, not_found | atom()}.
+    {ok, dtl_template:template()} | {error, not_found | atom()}.
 select_template([Name|Names]) ->
     case get_template(Name) of
         {ok, Tpl} -> {ok, Tpl};
