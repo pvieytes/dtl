@@ -157,10 +157,9 @@ Render the first of several found templates:
 
 ##5. Syntax
 
-Template syntax is identical to Django template syntax. Please report
-any observable differences.
-
-    https://docs.djangoproject.com/en/dev/topics/templates/
+Template syntax is identical to that of the [Django template
+language](https://docs.djangoproject.com/en/dev/topics/templates/).
+Please report any observable differences.
 
 
 ##6. Context and Context Processors
