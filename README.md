@@ -2,13 +2,13 @@
 
 A full-featured port of the Django template engine to Erlang.
 
-**Warning:** The template engine is in a working but still "alpha"
-state, particularly until error handling is cleaned up.
+    Warning: The template engine is in a working but still "alpha"
+    state, particularly until error handling is cleaned up.
 
-The custom tag and filter API works as do all rendering and lookup
-functions. See [Built-in Tags and Filters](#7-built-in-tags-and-filters)
-for an up-to-date table documenting tag and filter compatibility with
-the Django defaults.
+    The custom tag and filter API works as do all rendering and lookup
+    functions. See [Built-in Tags and Filters](#7-built-in-tags-and-filters)
+    for an up-to-date table documenting tag and filter compatibility
+    with the Django defaults.
 
 1. [Introduction](#1-introduction)
 2. [Installation](#2-installation)
