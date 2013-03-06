@@ -71,6 +71,7 @@ smart_split(Subj) ->
     {match, Parts} = re:run(Subj, Re, [{capture, first, binary}, global]),
     [Part || [Part] <- Parts].
 
+%% @doc Run `list_to_atom' without exceptions.
 -spec safe_list_to_atom(list()) -> atom() | error.
 safe_list_to_atom(L) ->
     try list_to_existing_atom(L) of

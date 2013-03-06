@@ -27,6 +27,8 @@
 %%      Definitions of core node types (text, variable, etc.).
 -module(dtl_node).
 
+-type renderer() :: {module(), atom()} | fun() | undefined.
+
 %% @doc Nodes, the building blocks of templates. Nodes themselves may
 %%      contain lists of other nodes, so template rendering is
 %%      recursive.
@@ -38,7 +40,7 @@
     %% Convenient state field. Block tags that consume tokens need this.
     nodelist = [] :: [tnode()],
     %% Renderer callback. If not provided, this won't render.
-    renderer :: {atom(), atom()} | fun() | undefined,
+    renderer :: renderer(),
     %% State bucket.
     state
 }).
@@ -46,7 +48,8 @@
 -opaque unode() :: #unode{}.
 -type tnode() :: unode() | binary() | list().
 
--export([name/1,
+-export([get_nodes_by_type/2,
+         name/1,
          new/1,
          new/2,
          new_var/1,
@@ -61,19 +64,39 @@
 -export_type([tnode/0,
               unode/0]).
 
+%% @doc Create a new node with no renderer.
+-spec new(list()) -> unode().
 new(Name) -> new(Name, undefined).
+
+%% @doc Create a new node with a renderer.
+-spec new(list(), renderer()) -> unode().
 new(Name, Renderer) -> #unode{name = Name, renderer = Renderer}.
 
-name(Node) -> Node#unode.name.
+%% @doc Get the node's name (all nodes have names), or "text" for a
+%%      list/binary node.
+-spec name(tnode()) -> list().
+name(Node) when is_list(Node) -> "text";
+name(Node) when is_binary(Node) -> "text";
+name(#unode{name = Name}) -> Name.
 
+%% @doc Set a node's renderer.
+-spec set_renderer(unode(), renderer()) -> unode().
 set_renderer(Node, Renderer) -> Node#unode{renderer = Renderer}.
 
+%% @doc Set a node's state.
+-spec set_state(unode(), term()) -> unode().
 set_state(Node, State) -> Node#unode{state = State}.
 
+%% @doc Get a node's state.
+-spec state(unode()) -> term().
 state(Node) -> Node#unode.state.
 
+%% @doc Set a node's child nodes.
+-spec set_nodelist(unode, [tnode()]) -> unode().
 set_nodelist(Node, Nodes) -> Node#unode{nodelist = Nodes}.
 
+%% @doc Get a node's child nodes.
+-spec nodelist(unode()) -> [tnode()].
 nodelist(Node) -> Node#unode.nodelist.
 
 %% @doc Renders a list of nodes.
@@ -122,3 +145,13 @@ render_var(#unode{state = FilterExpr}, Ctx) ->
 var_to_binary(undefined) -> dtl:setting(empty_term);
 var_to_binary(T) when is_binary(T) -> T;
 var_to_binary(T) -> list_to_binary(io_lib:format("~w", [T])).
+
+%% @doc Get all named nodes of a given name within a certain node.
+-spec get_nodes_by_type(unode(), atom()) -> [unode()].
+get_nodes_by_type(Node = #unode{name = Name, nodelist = Nodelist}, Type) ->
+    Children = [get_nodes_by_type(N, Type) || N <- Nodelist],
+    Nodes = case atom_to_list(Type) of
+        Name -> [Node|Children];
+        _ -> Children
+    end,
+    lists:flatten(Nodes).

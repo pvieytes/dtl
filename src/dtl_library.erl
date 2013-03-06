@@ -60,8 +60,8 @@ add_tags(Mod, Tags) ->
         dict:store(Name, Tag, Dict)
     end, Tags, Mod:registered_tags()).
 
--spec convert_user_tag_spec(name(), tag_spec())
-    -> {name(), dtl_tag:tag()}.
+-spec convert_user_tag_spec(name(), tag_spec()) ->
+    {name(), dtl_tag:tag()}.
 convert_user_tag_spec(Mod, {{WrapMod, WrapFun}, Name}) ->
     {Name, {{WrapMod, WrapFun, []}, {Mod, Name}}};
 convert_user_tag_spec(Mod, {{WrapMod, WrapFun, Arg}, Name}) ->
@@ -69,6 +69,7 @@ convert_user_tag_spec(Mod, {{WrapMod, WrapFun, Arg}, Name}) ->
 convert_user_tag_spec(Mod, Name) ->
     {Name, {Mod, Name}}.
 
+%% @doc Search for a tag or filter in the given library dict.
 -spec search_collection(library(), name()) ->
     dtl_tag:tag() | dtl_filter:filter() | nomatch.
 search_collection(Coll, Name) ->

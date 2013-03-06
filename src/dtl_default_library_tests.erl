@@ -36,20 +36,28 @@
 
 load_tag_test_() ->
     dtl_tests:compare_templates([
-        {Out, <<"{% load dtl_default_library_tests %}", In/binary>>}
-            || {Out, In} <- [{<<"Cat">>, <<"{{ dog|make_cat }}">>},
-                             {<<"2">>, <<"{% wc %} Two words {% endwc %}">>}]
+        {Out, <<"{% load dtl_default_library_tests %}", In/binary>>} ||
+            {Out, In} <- [{<<"Cat">>, <<"{{ dog|make_cat }}">>},
+                             {<<"2">>,
+                              <<"{% wc %} Two words {% endwc %}">>}]
         ], dtl_context:new([{dog, <<"Dog">>}])).
+
+% block_tag_test() ->
+%     {ok, Expected} = dtl_loader:find_template("page-out.html"),
+%     {ok, Out} = dtl:render("page.html"),
+%     [?_assertEqual(Expected, Out)].
 
 filter_test_() ->
     Ctx = dtl_context:new([{ quotes, <<"'\"\\">>}]),
-    dtl_tests:compare_templates([{<<"abc">>, <<"{{ \"ABC\"|lower }}">>},
-                                 {<<"ABC">>, <<"{{ \"abc\"|upper }}">>},
-                                 {<<"\\'\\\"\\\\">>, <<"{{ quotes|addslashes }}">>},
-                                 {<<"Trout">>, <<"{{ \"trout\"|capfirst }}">>}], Ctx).
+    dtl_tests:compare_templates([
+        {<<"abc">>, <<"{{ \"ABC\"|lower }}">>},
+        {<<"ABC">>, <<"{{ \"abc\"|upper }}">>},
+        {<<"\\'\\\"\\\\">>, <<"{{ quotes|addslashes }}">>},
+        {<<"Trout">>, <<"{{ \"trout\"|capfirst }}">>}
+    ], Ctx).
 
 
-%% dtl_library.
+%% dtl_library (for {% load %} tests).
 registered_filters() -> [make_cat].
 registered_tags() -> [wc].
 

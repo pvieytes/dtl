@@ -33,6 +33,7 @@
 -export([add_library/2,
          delete_first_token/1,
          find_filter/2,
+         find_tag/2,
          new/1,
          parse/1,
          parse/2,
@@ -48,6 +49,7 @@ new(Tokens) ->
                      tags = dict:new()},
     add_library(Parser, dtl_default_library).
 
+%% @doc Adds a library's tags and filters to the parser.
 -spec add_library(parser(), atom()) -> parser().
 add_library(Parser = #parser{tags = Tags, filters = Filters}, Mod) ->
     Parser#parser{filters = dtl_library:add_filters(Mod, Filters),
@@ -79,7 +81,7 @@ parse(Parser = #parser{tokens = Tokens}, Until) ->
 -spec parse_until(parser(), [dtl_lexer:token()], [atom()],
        [dtl_node:tnode()]) -> {ok, dtl_node:tnodelist(), parser()}
                                | {error, empty_block_tag
-                                       | unknown_tag
+                                       | {unknown_tag, atom()}
                                        | unclosed_block_tag}.
 parse_until(Parser, [{?TOKEN_TEXT, Src}|Tokens], Until, Nodes) ->
     parse_until(Parser, Tokens, Until, [Src|Nodes]);
@@ -102,7 +104,7 @@ parse_until(Parser, AllTokens = [Token = {?TOKEN_BLOCK, Src}|Tokens],
                              Parser#parser{tokens = AllTokens}};
                         false ->
                             case find_tag(Parser, Name) of
-                                nomatch -> {error, unknown_tag};
+                                nomatch -> {error, {unknown_tag, RawName}};
                                 {ok, Tag} ->
                                     Parser2 = Parser#parser{tokens = Tokens},
                                     case dtl_tag:run(Tag, Parser2, Token) of
@@ -134,10 +136,15 @@ split_token(Src) ->
 find_filter(#parser{filters = Filters}, Name) ->
     dtl_library:search_collection(Filters, Name).
 
+%% @doc Search the parser's tag collection for a tag with the provided
+%%      name.
 -spec find_tag(parser(), dtl_library:name()) ->
     {ok, dtl_library:tag_spec()} | nomatch.
 find_tag(#parser{tags = Tags}, Name) ->
     dtl_library:search_collection(Tags, Name).
 
+%% @doc Remove the first token from a parser's token list. Use this to
+%%      remove a token you just parsed up to with parse/2 when you want
+%%      to discard that token.
 delete_first_token(Parser = #parser{tokens = [_|Tokens]}) ->
     Parser#parser{tokens = Tokens}.

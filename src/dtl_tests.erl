@@ -20,7 +20,8 @@
 %% CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 %% SOFTWARE.
 
-%% @doc System tests of high-level DTL functions.
+%% @doc System tests of high-level DTL functions. Test utilities are all
+%%      defined here as well.
 -module(dtl_tests).
 
 -export([compare_templates/2]).
@@ -45,5 +46,5 @@ render_test_() ->
 %% rendering. Provide expected template source, output, and context.
 compare_templates(Tests, Ctx) ->
      [?_assertEqual({ok, Out, Ctx},
-                    dtl_template:render(dtl_template:new(In), Ctx))
-        || {Out, In} <- Tests].
+                    dtl_template:render(dtl_template:new(In), Ctx)) ||
+                        {Out, In} <- Tests].

@@ -40,18 +40,22 @@ registered_filters() -> [].
 registered_tags() -> [simple,
                       simple_list,
                       simple_named,
-                      {{dtl_tag, inclusion_tag, "included.html"}, show_o}].
+                      {{dtl_tag, inclusion_tag, "included.html"},
+                       show_o}].
 
 simple_tags_test_() ->
-    dtl_tests:compare_templates([{Out, <<"{% load dtl_tag_tests %}", In/binary>>}
-        || {Out, In} <- [{<<"Simple">>, <<"{% simple %}">>},
-                         {<<"List">>, <<"{% simple_list %}">>},
-                         {<<"Named `simple_named'">>, <<"{% simple_named %}">>}]
+    dtl_tests:compare_templates([
+        {Out, <<"{% load dtl_tag_tests %}", In/binary>>} ||
+            {Out, In} <- [{<<"Simple">>, <<"{% simple %}">>},
+                          {<<"List">>, <<"{% simple_list %}">>},
+                          {<<"Named `simple_named'">>,
+                           <<"{% simple_named %}">>}]
     ], dtl_context:new()).
 
 inclusion_tag_test_() ->
-    dtl_tests:compare_templates([{Out, <<"{% load dtl_tag_tests %}", In/binary>>}
-        || {Out, In} <- [{<<"O!\n">>, <<"{% show_o %}">>}]
+    dtl_tests:compare_templates([
+        {Out, <<"{% load dtl_tag_tests %}", In/binary>>} ||
+            {Out, In} <- [{<<"O!\n">>, <<"{% show_o %}">>}]
     ], dtl_context:new()).
 
 %%

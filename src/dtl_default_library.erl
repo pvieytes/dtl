@@ -35,8 +35,13 @@
 
 %% Tags
 -export([load/2]).
+-export([block/2, render_block/2,
+         extends/2, render_extends/2,
+         load/2]).
 
-registered_tags() -> [load].
+registered_tags() -> [block,
+                      extends,
+                      load].
 registered_filters() -> [addslashes,
                          capfirst,
                          lower,
@@ -74,14 +79,56 @@ upper(Bin) ->
 %% Tags
 %%
 
+block(Parser, Token) ->
+    {ok, Nodes, Parser2} = dtl_parser:parse(Parser, [endblock]),
+    Node = dtl_node:new("block", {?MODULE, render_block}),
+    Node2 = dtl_node:set_nodelist(Node, Nodes),
+    {ok, Node2, dtl_parser:delete_first_token(Parser2)}.
+
+render_block(Node, Ctx) ->
+    <<>>.
+
+%% @doc Inherit one template from another. Child template must define
+%%      all content in {% block Name %} tags, which will override any block
+%%      with the same name in parent templates.
+-spec extends(dtl_parser:parser(), dtl_lexer:token()) ->
+    {ok, dtl_node:unode(), dtl_parser:parser()}
+        | {error, {template_not_found, binary()}
+                | {badarg, extends_tag}}.
+extends(Parser, Token) ->
+    %% TODO: Validate that only one {% extends %} occurs in document.
+    %% TODO: Validate that {% extends %} is the first tag in the
+    %%       template.
+    case dtl_parser:split_Token(Token) of
+        [_Cmd, RawName] ->
+            ParentExpr = dtl_filter:parse(RawName, Parser),
+            Node = dtl_node:new("extends", {?MODULE, render_extends}),
+            {ok, Nodes, Parser2} = dtl_parser:parse(Parser),
+            Node2 = dtl_node:set_nodelist(Node, Nodes),
+            Node3 = dtl_node:set_state(Node, ParentExpr),
+            {ok, Node3, Parser2};
+        [_Cmd|_] -> {error, {badarg, extends_tag}}
+    end.
+
+render_extends(Node, Ctx) ->
+    Nodes = dtl_node:nodelist(Node),
+    ParentExpr = dtl_node:state(Node),
+    Blocks = [{dtl_node:name(N), N} ||
+        N <- dtl_node:get_nodes_by_type(Nodes, block)],
+    Parent = dtl_filter:resolve_expr(ParentExpr, Ctx),
+    Tpl = case dtl_template:is_template(Parent) of
+        true -> Parent;
+        false -> dtl_loader:get_template(binary_to_list(Parent))
+    end.
+
 %% @doc Loads tag: `{% load library_name %}' where `library_name' is a
 %%      module implementing the `dtl_library' interface.
 -spec load(dtl_parser:parser(), dtl_lexer:token()) ->
-    {ok, dtl_node:tnode(), dtl_parser:parser()}
+    {ok, dtl_node:unode(), dtl_parser:parser()}
         | {error, missing_library | load_tag_syntax_error}.
 load(Parser, {_Type, Token}) ->
     case dtl_parser:split_token(Token) of
-        [<<"load">>, LibBin] ->
+        [_Cmd, LibBin] ->
             case dtl_string:safe_list_to_atom(binary_to_list(LibBin)) of
                 error -> {error, missing_library};
                 Lib ->

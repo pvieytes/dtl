@@ -24,7 +24,8 @@
 %%      template operations.
 -module(dtl_template).
 
--export([new/1,
+-export([is_template/1,
+         new/1,
          nodelist/1,
          render/2]).
 
@@ -42,6 +43,15 @@
 new(Str) ->
     #tpl{nodelist = compile_string(Str)}.
 
+%% @doc Get the template's nodes.
+-spec nodelist(template()) -> [dtl_node:tnode()].
+nodelist(Tpl) -> Tpl#tpl.nodelist.
+
+%% @doc Test if a term is a template or not.
+-spec is_template(term()) -> boolean().
+is_template(Tpl) when is_record(Tpl, tpl) -> true;
+is_template(_) -> false.
+
 %% @doc Renders the provided template with the context (stub).
 -spec render(template(), dtl_context:context()) ->
     {ok, binary(), dtl_context:context()} | {error, atom()}.
@@ -54,7 +64,7 @@ render(#tpl{nodelist = NodeList}, Ctx) ->
     %% No need to pop the render context, just reuse the original one.
     {ok, iolist_to_binary(OutList), Ctx}.
 
-%% @doc Compile a string to a nodelist.
+%% Compile a string to a nodelist.
 -spec compile_string(binary()) -> [dtl_node:tnode()].
 compile_string(Str) ->
     {LexerMod, ParserMod} = get_compiler(dtl:setting(debug)),
@@ -63,9 +73,7 @@ compile_string(Str) ->
     {ok, NodeList, _Parser2} = ParserMod:parse(Parser),
     NodeList.
 
-%% @doc `true' for Debug mode, `false' otherwise.
+%% Test if a term is a template or not.
 -spec get_compiler(boolean()) -> {atom(), atom()}.
 get_compiler(true) -> {dtl_debug_lexer, dtl_debug_parser};
 get_compiler(false) -> {dtl_lexer, dtl_parser}.
-
-nodelist(Tpl) -> Tpl#tpl.nodelist.
