@@ -110,7 +110,13 @@ render_list(NodeList, Ctx) ->
 render_list([#unode{renderer = undefined}|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, Bits);
 render_list([Node|NodeList], Ctx, Bits) ->
-    render_list(NodeList, Ctx, [render(Node, Ctx)|Bits]);
+    {Bin2, Ctx2} = case render(Node, Ctx) of
+        %% Node renderers may modify the context by returning a tuple.
+        %% TODO: Document this.
+        {Bin, Ctx3} -> {Bin, Ctx3};
+        Bin -> {Bin, Ctx}
+    end,
+    render_list(NodeList, Ctx2, [Bin2|Bits]);
 render_list([], _Ctx, Bits) -> lists:reverse(Bits).
 
 %% @doc Renders a single node.
@@ -146,11 +152,13 @@ var_to_binary(T) when is_binary(T) -> T;
 var_to_binary(T) -> list_to_binary(io_lib:format("~w", [T])).
 
 %% @doc Get all named nodes of a given name within a certain node.
--spec get_nodes_by_type(unode(), atom()) -> [unode()].
+-spec get_nodes_by_type(tnode(), atom()) -> [unode()].
 get_nodes_by_type(Node = #unode{name = Name, nodelist = Nodelist}, Type) ->
     Children = [get_nodes_by_type(N, Type) || N <- Nodelist],
     Nodes = case atom_to_list(Type) of
         Name -> [Node|Children];
         _ -> Children
     end,
-    lists:flatten(Nodes).
+    lists:flatten(Nodes);
+get_nodes_by_type(Node, _Type) when is_list(Node) -> [];
+get_nodes_by_type(Node, _Type) when is_binary(Node) -> [].

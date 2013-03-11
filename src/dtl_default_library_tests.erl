@@ -42,10 +42,10 @@ load_tag_test_() ->
                               <<"{% wc %} Two words {% endwc %}">>}]
         ], dtl_context:new([{dog, <<"Dog">>}])).
 
-% block_tag_test() ->
-%     {ok, Expected} = dtl_loader:find_template("page-out.html"),
-%     {ok, Out} = dtl:render("page.html"),
-%     [?_assertEqual(Expected, Out)].
+block_tag_test_() ->
+    {ok, Expected} = dtl_loader:find_template("page-out.html"),
+    {ok, Out} = dtl:render("page.html"),
+    [?_assertEqual(Expected, Out)].
 
 filter_test_() ->
     Ctx = dtl_context:new([{ quotes, <<"'\"\\">>}]),
