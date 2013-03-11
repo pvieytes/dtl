@@ -62,7 +62,7 @@ program:
 	$(REBAR) compile skip_deps=true
 
 clean: ct-clean doc-clean
-	$(REBAR) clean
+	$(REBAR) clean skip_deps=true
 	$(MAKE) -C $(TEST_APP) clean
 
 ct-clean:
