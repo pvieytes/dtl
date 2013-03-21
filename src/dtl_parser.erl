@@ -27,16 +27,19 @@
 
 -record(parser, {tokens :: [dtl_lexer:token()],
                  tags :: dict(),
-                 filters :: dict()}).
+                 filters :: dict(),
+                 blocks = [] :: [binary()]}).
 -opaque parser() :: #parser{}.
 
 -export([add_library/2,
+         blocks/1,
          delete_first_token/1,
          find_filter/2,
          find_tag/2,
          new/1,
          parse/1,
          parse/2,
+         set_blocks/2,
          split_token/1]).
 -export_type([parser/0]).
 
@@ -53,7 +56,7 @@ new(Tokens) ->
 -spec add_library(parser(), atom()) -> parser().
 add_library(Parser = #parser{tags = Tags, filters = Filters}, Mod) ->
     Parser#parser{filters = dtl_library:add_filters(Mod, Filters),
-                      tags = dtl_library:add_tags(Mod, Tags)}.
+                  tags = dtl_library:add_tags(Mod, Tags)}.
 
 %% @doc Parses all tokens within the provided parser, returning the
 %%      resulting nodelist. See parse/2 for errors.
@@ -148,3 +151,6 @@ find_tag(#parser{tags = Tags}, Name) ->
 %%      to discard that token.
 delete_first_token(Parser = #parser{tokens = [_|Tokens]}) ->
     Parser#parser{tokens = Tokens}.
+
+blocks(#parser{blocks = Blocks}) -> Blocks.
+set_blocks(Parser, Blocks) -> Parser#parser{blocks = Blocks}.

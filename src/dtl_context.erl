@@ -136,7 +136,8 @@ fetch(Ctx, K, Def) ->
 %%      context.
 -spec render_fetch(context(), term()) -> term() | undefined.
 render_fetch(#ctx{stack = [Head|_Stack]}, K) ->
-    fetch_stack([Head], K).
+    fetch_stack([Head], K);
+render_fetch(#ctx{stack = []}, _) -> undefined.
 
 %% @doc Same as render_fetch/2, but returns the default value if the key
 %%      is not defined on the context.

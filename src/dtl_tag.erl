@@ -62,5 +62,5 @@ inclusion_tag(Name, Mod, Fun, Parser, _Token) ->
 render_inclusion_tag(Node, Ctx) ->
     {Mod, Fun, Args, Opts} = dtl_node:state(Node),
     Ctx2 = dtl_context:update(Ctx, Mod:Fun(Args, Opts)),
-    {ok, Bin} = dtl_node:render_list(dtl_node:nodelist(Node), Ctx2),
-    Bin.
+    {ok, Bin, Ctx3} = dtl_node:render_list(dtl_node:nodelist(Node), Ctx2),
+    {Bin, Ctx3}.

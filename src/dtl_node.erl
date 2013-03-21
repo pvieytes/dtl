@@ -48,6 +48,7 @@
 -type tnode() :: unode() | binary() | list().
 
 -export([get_nodes_by_type/2,
+         get_nodes_by_type_from_list/2,
          name/1,
          new/1,
          new/2,
@@ -100,12 +101,13 @@ nodelist(Node) -> Node#unode.nodelist.
 
 %% @doc Renders a list of nodes.
 -spec render_list([tnode()], dtl_context:context()) ->
-    {ok, [binary()]}.
+    {ok, [binary()], dtl_context:context()}.
 render_list(NodeList, Ctx) ->
-    {ok, render_list(NodeList, Ctx, [])}.
+    {Bin, Ctx2} = render_list(NodeList, Ctx, []),
+    {ok, Bin, Ctx2}.
 
 -spec render_list([tnode()], dtl_context:context(), [binary()]) ->
-    [binary()].
+    {[binary()], dtl_context:context()}.
 %% Skip no-renderer.
 render_list([#unode{renderer = undefined}|NodeList], Ctx, Bits) ->
     render_list(NodeList, Ctx, Bits);
@@ -117,7 +119,7 @@ render_list([Node|NodeList], Ctx, Bits) ->
         Bin -> {Bin, Ctx}
     end,
     render_list(NodeList, Ctx2, [Bin2|Bits]);
-render_list([], _Ctx, Bits) -> lists:reverse(Bits).
+render_list([], Ctx, Bits) -> {lists:reverse(Bits), Ctx}.
 
 %% @doc Renders a single node.
 -spec render(tnode(), dtl_context:context()) -> binary().
@@ -147,11 +149,11 @@ render_var(#unode{state = FilterExpr}, Ctx) ->
 
 -spec var_to_binary(term()) -> binary().
 %% This behavior may be configurable.
-var_to_binary(undefined) -> dtl:setting(empty_term);
+var_to_binary(undefined) -> dtl:setting(empty_term_replacement);
 var_to_binary(T) when is_binary(T) -> T;
 var_to_binary(T) -> list_to_binary(io_lib:format("~w", [T])).
 
-%% @doc Get all named nodes of a given name within a certain node.
+%% @doc Get all nodes with a given name within a certain node.
 -spec get_nodes_by_type(tnode(), atom()) -> [unode()].
 get_nodes_by_type(Node = #unode{name = Name, nodelist = Nodelist}, Type) ->
     Children = [get_nodes_by_type(N, Type) || N <- Nodelist],
@@ -162,3 +164,8 @@ get_nodes_by_type(Node = #unode{name = Name, nodelist = Nodelist}, Type) ->
     lists:flatten(Nodes);
 get_nodes_by_type(Node, _Type) when is_list(Node) -> [];
 get_nodes_by_type(Node, _Type) when is_binary(Node) -> [].
+
+%% @doc Get all nodes with a given name within a node list.
+-spec get_nodes_by_type_from_list([tnode()], atom()) -> [unode()].
+get_nodes_by_type_from_list(Nodes, Type) ->
+    [Match || Node <- Nodes, Match <- get_nodes_by_type(Node, Type)].

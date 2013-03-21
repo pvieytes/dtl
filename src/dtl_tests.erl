@@ -45,6 +45,7 @@ render_test_() ->
 %% Convenience function to test template source compilation and
 %% rendering. Provide expected template source, output, and context.
 compare_templates(Tests, Ctx) ->
-     [?_assertEqual({ok, Out, Ctx},
-                    dtl_template:render(dtl_template:new(In), Ctx)) ||
-                        {Out, In} <- Tests].
+    lists:foldr(fun ({Expect, In}, Tests2) ->
+        {ok, Out, _Ctx} = dtl_template:render(dtl_template:new(In), Ctx),
+        [?_assertEqual(Expect, Out)|Tests2]
+    end, [], Tests).

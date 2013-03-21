@@ -35,9 +35,9 @@ text_node_test_() ->
 %% Test that a nodelist renders correctly.
 list_render_test_() ->
     Ctx = dtl_context:new(),
-    [?_assertEqual({ok, [<<"a">>, <<"b">>, <<"c">>]},
+    [?_assertEqual({ok, [<<"a">>, <<"b">>, <<"c">>], Ctx},
                          dtl_node:render_list(["a", "b", "c"], Ctx)),
-     ?_assertEqual({ok, []}, dtl_node:render_list([], Ctx))].
+     ?_assertEqual({ok, [], Ctx}, dtl_node:render_list([], Ctx))].
 
 %% Test that all sorts of variables and constants are read and
 %% substituted properly in renderered templates.
@@ -59,4 +59,9 @@ variable_node_test_() ->
                            {nested, [{ a, 1 }]},
                            {an_atom, {1, 2, 3}},
                            {a_list, [1, 2, 3]}]),
+    dtl_tests:compare_templates(Tests, Ctx).
+
+empty_render_test_() ->
+    Tests = [{<<"  ">>, <<" {{ MISSING }} ">>}],
+    Ctx = dtl_context:new(),
     dtl_tests:compare_templates(Tests, Ctx).

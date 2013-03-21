@@ -56,13 +56,8 @@ is_template(_) -> false.
 -spec render(template(), dtl_context:context()) ->
     {ok, binary(), dtl_context:context()} | {error, atom()}.
 render(#tpl{nodelist = NodeList}, Ctx) ->
-    %% Push onto the render context: This is so that {% assign %} and
-    %% similar tags can modify the context safely.
-    RenderCtx = dtl_context:render_context(Ctx),
-    Ctx2 = dtl_context:set_render_context(Ctx, dtl_context:push(RenderCtx)),
-    {ok, OutList} = dtl_node:render_list(NodeList, Ctx2),
-    %% No need to pop the render context, just reuse the original one.
-    {ok, iolist_to_binary(OutList), Ctx}.
+    {ok, OutList, Ctx2} = dtl_node:render_list(NodeList, Ctx),
+    {ok, iolist_to_binary(OutList), Ctx2}.
 
 %% Compile a string to a nodelist.
 -spec compile_string(binary()) -> [dtl_node:tnode()].
