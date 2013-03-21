@@ -47,8 +47,11 @@ block_tag_test() ->
     {ok, Out} = dtl:render("block.html"),
     {ok, Expected2} = dtl_loader:find_template("block-out2.html"),
     {ok, Out2} = dtl:render("block2.html"),
+    {ok, Expected3} = dtl_loader:find_template("block-out3.html"),
+    {ok, Out3} = dtl:render("block3.html"),
     ?assertEqual(Expected, Out),
-    ?assertEqual(Expected2, Out2).
+    ?assertEqual(Expected2, Out2),
+    ?assertEqual(Expected3, Out3).
 
 filter_test_() ->
     Ctx = dtl_context:new([{ quotes, <<"'\"\\">>}]),
@@ -58,6 +61,11 @@ filter_test_() ->
         {<<"\\'\\\"\\\\">>, <<"{{ quotes|addslashes }}">>},
         {<<"Trout">>, <<"{{ \"trout\"|capfirst }}">>}
     ], Ctx).
+
+comment_tag_test_() ->
+    Tests = [{<<>>, <<"{% comment %} Stuff {% endcomment %}">>}],
+    Ctx = dtl_context:new(),
+    dtl_tests:compare_templates(Tests, Ctx).
 
 
 %% dtl_library (for {% load %} tests).

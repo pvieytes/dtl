@@ -29,7 +29,8 @@
          registered_tags/0]).
 
 %% Tags
--export([simple/2,
+-export([regular/2, render_regular/2,
+         simple/2,
          simple_list/2,
          simple_named/2,
          show_o/2]).
@@ -37,11 +38,19 @@
 -include_lib("eunit/include/eunit.hrl").
 
 registered_filters() -> [].
-registered_tags() -> [simple,
+registered_tags() -> [regular,
+                      simple,
                       simple_list,
                       simple_named,
                       {{dtl_tag, inclusion_tag, "included.html"},
                        show_o}].
+
+regular_custom_tags_test() ->
+    dtl_tests:compare_templates([
+        {Out, <<"{% load dtl_tag_tests %}", In/binary>>} ||
+            {Out, In} <- [{<<"<div>\n\nTest\n\n</div>">>,
+                           <<"<div>\n\n{% regular \"Stuff\" %}\n\n</div>">>}]
+    ], dtl_context:new()).
 
 simple_tags_test_() ->
     dtl_tests:compare_templates([
@@ -62,9 +71,18 @@ inclusion_tag_test_() ->
 %% Tags
 %%
 
-simple(Parser, _) -> {ok, <<"Simple">>, Parser}.
+regular(Parser, _Token) ->
+    Node = dtl_node:new("regular", {?MODULE, render_regular}),
+    {ok, Node, Parser}.
 
-simple_list(Parser, _) -> {ok, "List", Parser}.
+render_regular(_Node, _Ctx) ->
+    <<"Test">>.
+
+simple(Parser, _Token) ->
+    {ok, <<"Simple">>, Parser}.
+
+simple_list(Parser, _Token) ->
+    {ok, "List", Parser}.
 
 simple_named(Parser, _Token) ->
     {ok, dtl_node:new("simple_named", fun (Node, _Ctx) ->
@@ -72,4 +90,5 @@ simple_named(Parser, _Token) ->
         <<"Named `", Name/binary, "'">>
      end), Parser}.
 
-show_o([], []) -> [{o, <<"O!">>}].
+show_o([], []) ->
+    [{o, <<"O!">>}].

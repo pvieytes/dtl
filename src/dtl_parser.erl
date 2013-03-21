@@ -40,6 +40,7 @@
          parse/1,
          parse/2,
          set_blocks/2,
+         skip_past/2,
          split_token/1]).
 -export_type([parser/0]).
 
@@ -88,6 +89,9 @@ parse(Parser = #parser{tokens = Tokens}, Until) ->
                                        | unclosed_block_tag}.
 parse_until(Parser, [{?TOKEN_TEXT, Src}|Tokens], Until, Nodes) ->
     parse_until(Parser, Tokens, Until, [Src|Nodes]);
+%% Discard comments.
+parse_until(Parser, [{?TOKEN_COMMENT, _Src}|Tokens], Until, Nodes) ->
+    parse_until(Parser, Tokens, Until, Nodes);
 parse_until(Parser, [{?TOKEN_VAR, Src}|Tokens], Until, Nodes) ->
     FilterExpr = dtl_filter:parse(Src, Parser),
     Node = dtl_node:new_var(FilterExpr),
@@ -126,6 +130,22 @@ parse_until(Parser, [], [], Nodes) ->
 parse_until(_Parser, [], _Until, _Nodes) ->
     {error, unclosed_block_tag}.
 
+%% @doc Discard all tokens until the specified token is found.
+-spec skip_past(parser(), atom()) ->
+    parser() | {error, {unclosed_block_tag, atom()}}.
+skip_past(Parser = #parser{tokens = Tokens}, Until) ->
+    case skip_past_tokens(Tokens, list_to_binary(atom_to_list(Until))) of
+        E = {error, _} -> E;
+        T -> Parser#parser{tokens = T}
+    end.
+
+skip_past_tokens([{?TOKEN_BLOCK, Until}|Tokens], Until) ->
+    Tokens;
+skip_past_tokens([_|Tokens], Until) ->
+    skip_past_tokens(Tokens, Until);
+skip_past_tokens([], Until) ->
+    {error, {unclosed_block_tag, Until}}.
+
 %% @doc Splits a block tag template token into its constituent parts,
 %%      splitting on all whitespace not contained in a "" pair.
 -spec split_token(binary()) -> [binary()].
@@ -152,5 +172,12 @@ find_tag(#parser{tags = Tags}, Name) ->
 delete_first_token(Parser = #parser{tokens = [_|Tokens]}) ->
     Parser#parser{tokens = Tokens}.
 
-blocks(#parser{blocks = Blocks}) -> Blocks.
-set_blocks(Parser, Blocks) -> Parser#parser{blocks = Blocks}.
+%% @doc Fetch the block name tracker.
+-spec blocks(parser()) -> [binary()].
+blocks(#parser{blocks = Blocks}) ->
+    Blocks.
+
+%% @doc Update the block name tracker.
+-spec set_blocks(parser(), [binary()]) -> parser().
+set_blocks(Parser, Blocks) ->
+    Parser#parser{blocks = Blocks}.

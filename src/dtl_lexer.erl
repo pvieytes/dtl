@@ -57,8 +57,9 @@ tokenize(Src) ->
 %% template source code.
 -spec make_splitter() -> {re_pattern, term(), term(), term()}.
 make_splitter() ->
-    Expr = io_lib:format("(~s.*?~s|~s.*?~s|~s.*?~s)", ?SPLITTER_PARTS),
-    {ok, Re} = re:compile(Expr),
+    Splits = [dtl_string:escape_re(P) || P <- ?SPLITTER_PARTS],
+    Expr = io_lib:format("(~s.*?~s|~s.*?~s|~s.*?~s)", Splits),
+    {ok, Re} = re:compile(Expr, [dotall]),
     Re.
 
 %% Accumulator for tokenized bits. `InTag' is flipped on each recursion.
@@ -89,9 +90,11 @@ make_token(Src = <<?BLOCK_TAG_START, Rest/binary>>, true, true) ->
     end,
     {Token, not EndsVerbatim};
 %% Turn everything in {% verbatim %} into a text token.
-make_token(Src, _InTag, true) -> {{?TOKEN_TEXT, Src}, true};
+make_token(Src, _InTag, true) ->
+    {{?TOKEN_TEXT, Src}, true};
 %% If not in a tag, it's always a text token.
-make_token(Bit, false, Verbatim) -> {{?TOKEN_TEXT, Bit}, Verbatim};
+make_token(Bit, false, Verbatim) ->
+    {{?TOKEN_TEXT, Bit}, Verbatim};
 %% Chop the {{, }}, and extra whitespace off of variable tags.
 make_token(<<?VARIABLE_TAG_START, Rest/binary>>, true, Verbatim) ->
     {{?TOKEN_VAR, strip_token(Rest)}, Verbatim};
@@ -104,11 +107,12 @@ make_token(<<?BLOCK_TAG_START, Rest/binary>>, true, _Verbatim) ->
 %% throw it all out.
 %%
 %% Django records line number on each step.
-make_token(<<?COMMENT_TAG_START, Rest/binary>>, true, _Verbatim) ->
-    {?TOKEN_COMMENT, case binary:match(Rest, <<?TRANSLATOR_COMMENT_MARK>>) of
+make_token(<<?COMMENT_TAG_START, Rest/binary>>, true, Verbatim) ->
+    Token = case binary:match(Rest, <<?TRANSLATOR_COMMENT_MARK>>) of
         nomatch -> <<>>;
         {_Pos, _Len} -> strip_token(Rest)
-     end}.
+     end,
+    {{?TOKEN_COMMENT, Token}, Verbatim}.
 
 %% Strip whitespace and tag marks off the provided token.
 %%

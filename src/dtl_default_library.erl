@@ -38,10 +38,12 @@
 
 %% Tags
 -export([block/2, render_block/2,
+         comment/2,
          extends/2, render_extends/2,
          load/2]).
 
 registered_tags() -> [block,
+                      comment,
                       extends,
                       load].
 registered_filters() -> [addslashes,
@@ -272,3 +274,8 @@ load(Parser, Token) ->
 
         _ -> {error, load_tag_syntax_error}
     end.
+
+comment(Parser, _Token) ->
+    Parser2 = dtl_parser:skip_past(Parser, endcomment),
+    Node = dtl_node:new("comment", fun (_, _) -> <<>> end),
+    {ok, Node, Parser2}.

@@ -65,3 +65,8 @@ empty_render_test_() ->
     Tests = [{<<"  ">>, <<" {{ MISSING }} ">>}],
     Ctx = dtl_context:new(),
     dtl_tests:compare_templates(Tests, Ctx).
+
+comment_render_test_() ->
+    Tests = [{<<>>, <<"{#\nComments\n#}">>}],
+    Ctx = dtl_context:new(),
+    dtl_tests:compare_templates(Tests, Ctx).
