@@ -101,7 +101,7 @@ block(Parser, Token) ->
                     Parser2 = dtl_parser:set_blocks(Parser, [Name|Blocks]),
                     {ok, Nodes, Parser3} = dtl_parser:parse(Parser2, [endblock]),
                     Node = dtl_node:new("block", {?MODULE, render_block}),
-                    Node2 = dtl_node:set_nodelist(Node, Nodes),
+                    Node2 = dtl_node:set_nodelist(Node, lists:reverse(Nodes)),
                     Node3 = dtl_node:set_state(Node2, Name),
                     {ok, Node3, dtl_parser:delete_first_token(Parser3)}
             end;
