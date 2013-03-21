@@ -203,7 +203,7 @@ https://docs.djangoproject.com/en/dev/ref/templates/builtins/
 Name|Implemented
 ---|---
 `autoescape`|No
-`block`|No
+`block`|Yes
 `comment`|Yes
 `csrf_token`|No
 `cycle`|No
