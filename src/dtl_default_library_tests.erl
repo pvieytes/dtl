@@ -69,10 +69,12 @@ comment_tag_test_() ->
 
 if_tag_test_() ->
     Tests = [{<<"true">>, <<"{% if 1 > 0 %}true{% endif %}">>},
-             %% {<<"Else">>, <<"{% if 1 < 0 %}If{% else %}Else{% endif %}">>},
+             {<<"Else">>, <<"{% if 1 < 0 %}If{% else %}Else{% endif %}">>},
              {<<"eq">>, <<"{% if 2 =:= 2 %}eq{% endif %}">>},
+             {<<"eq">>, <<"{% if a == b %}eq{% endif %}">>},
+             {<<>>, <<"{% if a == c %}eq{% endif %}">>},
              {<<"neq">>, <<"{% if 2 =/= 3 %}neq{% endif %}">>}],
-    Ctx = dtl_context:new(),
+    Ctx = dtl_context:new([{a, a}, {b, a}, {c, b}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
 

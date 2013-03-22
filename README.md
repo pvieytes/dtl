@@ -213,7 +213,7 @@ Name|Implemented
 `firstof`|No
 `for`|No
 `for ... empty`|No
-`if`|No
+`if`|Yes
 `ifchanged`|No
 `ifequal`|No
 `ifnotequal`|No
