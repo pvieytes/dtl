@@ -215,8 +215,8 @@ Name|Implemented
 `for ... empty`|No
 `if`|Yes
 `ifchanged`|No
-`ifequal`|No
-`ifnotequal`|No
+`ifequal`|Yes
+`ifnotequal`|Yes
 `include`|No
 `load`|Yes
 `now`|No

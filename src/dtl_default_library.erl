@@ -60,6 +60,7 @@
          comment/2,
          extends/2, render_extends/2,
          'if'/2, render_if/2,
+         ifequal/2, ifnotequal/2, render_ifequal/2,
          load/2]).
 
 %% {% if %} operators. All are binary except for <<"not">>, and all
@@ -82,6 +83,8 @@ registered_tags() -> [block,
                       comment,
                       extends,
                       'if',
+                      ifequal,
+                      ifnotequal,
                       load].
 registered_filters() -> [addslashes,
                          capfirst,
@@ -109,8 +112,8 @@ registered_filters() -> [addslashes,
     {<<"=<">>,     {infix, 10, if_lte}}
 ]).
 
--define(IF_BINARY(X, Y, Op, Ctx),
-        if_eval_cond(X, Ctx) Op if_eval_cond(Y, Ctx)).
+-define(IF_BINARY(Fun, Op),
+        Fun(X, Y, Ctx) -> if_eval_cond(X, Ctx) Op if_eval_cond(Y, Ctx)).
 
 %%
 %% Filters
@@ -489,14 +492,14 @@ if_in(X, Y, Ctx) ->
 
 if_not_in(X, Y, Ctx) -> not if_in(X, Y, Ctx).
 
-if_eq(X, Y, Ctx) -> ?IF_BINARY(X, Y, ==, Ctx).
-if_exact_eq(X, Y, Ctx) -> ?IF_BINARY(X, Y, =:=, Ctx).
-if_neq(X, Y, Ctx) -> ?IF_BINARY(X, Y, /=, Ctx).
-if_exact_neq(X, Y, Ctx) -> ?IF_BINARY(X, Y, =/=, Ctx).
-if_lt(X, Y, Ctx) -> ?IF_BINARY(X, Y, <, Ctx).
-if_lte(X, Y, Ctx) -> ?IF_BINARY(X, Y, =<, Ctx).
-if_gt(X, Y, Ctx) -> ?IF_BINARY(X, Y, >, Ctx).
-if_gte(X, Y, Ctx) -> ?IF_BINARY(X, Y, >=, Ctx).
+?IF_BINARY(if_eq, ==).
+?IF_BINARY(if_exact_eq, =:=).
+?IF_BINARY(if_neq, /=).
+?IF_BINARY(if_exact_neq, =/=).
+?IF_BINARY(if_lt, <).
+?IF_BINARY(if_lte, =<).
+?IF_BINARY(if_gt, >).
+?IF_BINARY(if_gte, >=).
 
 if_true([]) -> false;
 if_true(0) -> false;
@@ -506,3 +509,48 @@ if_true(false) -> false;
 if_true(undefined) -> false;
 if_true({}) -> false;
 if_true(_) -> true.
+
+%% {% ifequal %} and {% ifnotequal %} tags.
+ifequal(Parser, Token) ->
+    do_ifequal(Parser, Token, true, endifequal).
+
+ifnotequal(Parser, Token) ->
+    do_ifequal(Parser, Token, false, endifnotequal).
+
+do_ifequal(Parser, Token, Equal, End) ->
+    case dtl_parser:split_token(Token) of
+        [_Cmd, X, Y] ->
+            {ok, TrueNodes, Parser2} = dtl_parser:parse(Parser, [else, End]),
+            {{_, Bin}, Parser3} = dtl_parser:next_token(Parser2),
+            {FalseNodes, Parser4} = case Bin of
+                <<"else">> ->
+                    {ok, Ns, Parser5} = dtl_parser:parse(Parser3, [End]),
+                    {Ns, dtl_parser:delete_first_token(Parser5)};
+                _ ->
+                    {[], Parser3}
+            end,
+            Node = dtl_node:new("ifequal", {?MODULE, render_ifequal}),
+            Nodes = [N || NL <- [TrueNodes, FalseNodes], N <- NL],
+            Node2 = dtl_node:set_nodelist(Node, Nodes),
+            X1 = dtl_filter:parse(X, Parser4),
+            Y1 = dtl_filter:parse(Y, Parser4),
+            Node3 = dtl_node:set_state(Node2, {Equal, X1, Y1,
+                                               TrueNodes, FalseNodes}),
+            {ok, Node3, Parser4};
+        _ -> {error, {badarg, ifequal_tag}}
+    end.
+
+render_ifequal(Node, Ctx) ->
+    {Equal, X, Y, TrueNodes, FalseNodes} = dtl_node:state(Node),
+    X1 = dtl_filter:resolve_expr(X, Ctx),
+    Y1 = dtl_filter:resolve_expr(Y, Ctx),
+    Passes = case Equal of
+        true -> X1 == Y1;
+        false -> X1 /= Y1
+    end,
+    Nodes = case Passes of
+        true -> TrueNodes;
+        false -> FalseNodes
+    end,
+    {ok, Bin, Ctx2} = dtl_node:render_list(Nodes, Ctx),
+    {Bin, Ctx2}.

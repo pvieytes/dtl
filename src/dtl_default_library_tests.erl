@@ -81,6 +81,17 @@ if_tag_test_() ->
                            {weather, <<"sunny">>}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
+ifequal_tag_test_() ->
+    Tests = [{<<"true">>, <<"{% ifequal 1 1 %}true{% endifequal %}">>},
+             {<<"false">>,
+              <<"{% ifnotequal 1 1 %}true{% else %}false{% endifnotequal %}">>},
+             {<<"false">>,
+              <<"{% ifequal a c %}true{% else %}false{% endifequal %}">>},
+             {<<"true">>, <<"{% ifnotequal a c %}true{% endifnotequal %}">>},
+             {<<"true">>, <<"{% ifequal a a %}true{% endifequal %}">>}],
+    Ctx = dtl_context:new([{a, a}, {b, a}, {c, b}]),
+    dtl_tests:compare_templates(Tests, Ctx).
+
 
 %% dtl_library (for {% load %} tests).
 registered_filters() -> [make_cat].
