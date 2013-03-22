@@ -72,6 +72,7 @@ if_tag_test_() ->
              {<<"Else">>, <<"{% if 1 < 0 %}If{% else %}Else{% endif %}">>},
              {<<"eq">>, <<"{% if 2 =:= 2 %}eq{% endif %}">>},
              {<<"eq">>, <<"{% if a == b %}eq{% endif %}">>},
+             {<<"1">>, <<"{% if 1 %}1{% endif %}">>},
              {<<>>, <<"{% if a == c %}eq{% endif %}">>},
              {<<"neq">>, <<"{% if 2 =/= 3 %}neq{% endif %}">>}],
     Ctx = dtl_context:new([{a, a}, {b, a}, {c, b}]),
