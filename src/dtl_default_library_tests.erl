@@ -74,8 +74,11 @@ if_tag_test_() ->
              {<<"eq">>, <<"{% if a == b %}eq{% endif %}">>},
              {<<"1">>, <<"{% if 1 %}1{% endif %}">>},
              {<<>>, <<"{% if a == c %}eq{% endif %}">>},
+             {<<"The weather is sunny.">>,
+              <<"{% if weather %}The weather is {{ weather }}.{% endif %}">>},
              {<<"neq">>, <<"{% if 2 =/= 3 %}neq{% endif %}">>}],
-    Ctx = dtl_context:new([{a, a}, {b, a}, {c, b}]),
+    Ctx = dtl_context:new([{a, a}, {b, a}, {c, b},
+                           {weather, <<"sunny">>}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
 

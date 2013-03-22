@@ -108,7 +108,7 @@ parse_until(Parser, AllTokens = [{?TOKEN_BLOCK, Src}|Tokens],
                 Name ->
                     case lists:member(Name, Until) of
                         true ->
-                            {ok, Nodes,
+                            {ok, lists:reverse(Nodes),
                              Parser#parser{tokens = AllTokens}};
                         false ->
                             case find_tag(Parser, Name) of
