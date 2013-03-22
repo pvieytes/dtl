@@ -30,4 +30,6 @@ main(_Args) ->
     code:add_patha(filename:join([Cwd, "ebin"])),
     Docs = filename:join([Cwd, "doc"]),
     ok = edoc:files(Files, [{dir, Docs},
-                            {new, true}]).
+                            {new, true},
+                            {preprocess, true},
+                            {includes, ["include"]}]).
