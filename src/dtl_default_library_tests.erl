@@ -67,6 +67,14 @@ comment_tag_test_() ->
     Ctx = dtl_context:new(),
     dtl_tests:compare_templates(Tests, Ctx).
 
+if_tag_test_() ->
+    Tests = [{<<"true">>, <<"{% if 1 > 0 %}true{% endif %}">>},
+             %% {<<"Else">>, <<"{% if 1 < 0 %}If{% else %}Else{% endif %}">>},
+             {<<"eq">>, <<"{% if 2 =:= 2 %}eq{% endif %}">>},
+             {<<"neq">>, <<"{% if 2 =/= 3 %}neq{% endif %}">>}],
+    Ctx = dtl_context:new(),
+    dtl_tests:compare_templates(Tests, Ctx).
+
 
 %% dtl_library (for {% load %} tests).
 registered_filters() -> [make_cat].

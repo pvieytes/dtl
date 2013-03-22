@@ -25,7 +25,11 @@
 -behaviour(dtl_library).
 
 -type block_context() :: dict().
--type block_spec() :: {list(), dtl_node:unode()}.
+-type block_spec() :: {Name :: list(),
+                       Node :: dtl_node:unode()}.
+-type if_bit() :: {Type :: infix | prefix | literal,
+                   Precedence :: integer(),
+                   State :: atom() | dtl_filter:expr()}.
 
 -export([registered_tags/0,
          registered_filters/0]).
@@ -40,11 +44,29 @@
 -export([block/2, render_block/2,
          comment/2,
          extends/2, render_extends/2,
+         'if'/2, render_if/2,
          load/2]).
+
+%% {% if %} operators. All are binary except for <<"not">>, and all
+%% accept a context.
+-export([if_and/3,
+         if_eq/3,
+         if_exact_eq/3,
+         if_exact_neq/3,
+         if_gt/3,
+         if_gte/3,
+         if_in/3,
+         if_lt/3,
+         if_lte/3,
+         if_neq/3,
+         if_not/2,
+         if_not_in/3,
+         if_or/3]).
 
 registered_tags() -> [block,
                       comment,
                       extends,
+                      'if',
                       load].
 registered_filters() -> [addslashes,
                          capfirst,
@@ -52,6 +74,30 @@ registered_filters() -> [addslashes,
                          upper].
 
 -define(BLOCK_CONTEXT_KEY, block_context).
+
+-define(IF_OPERATORS, [
+    {<<"or">>,     {infix, 6, if_or}},
+    {<<"and">>,    {infix, 7, if_and}},
+    {<<"not">>,    {prefix, 8, if_not}},
+    {<<"in">>,     {infix, 9, if_in}},
+    {<<"not in">>, {infix, 9, if_not_in}},
+    {<<"=">>,      {infix, 10, if_eq}},
+    {<<"==">>,     {infix, 10, if_eq}},
+    {<<"=:=">>,    {infix, 10, if_exact_eq}},
+    {<<"!=">>,     {infix, 10, if_neq}},
+    {<<"/=">>,     {infix, 10, if_neq}},
+    {<<"=/=">>,    {infix, 10, if_exact_neq}},
+    {<<">">>,      {infix, 10, if_gt}},
+    {<<">=">>,     {infix, 10, if_gte}},
+    {<<"<">>,      {infix, 10, if_lt}},
+    {<<"<=">>,     {infix, 10, if_lte}},
+    {<<"=<">>,     {infix, 10, if_lte}}
+]).
+
+-define(IF_END_TOKEN, {endtoken, 0, undefined}).
+
+-define(IF_RESOLVE(X, Y, Op, Ctx),
+        dtl_filter:resolve_expr(X, Ctx) Op dtl_filter:resolve(Y, Ctx)).
 
 %%
 %% Filters
@@ -275,7 +321,125 @@ load(Parser, Token) ->
         _ -> {error, load_tag_syntax_error}
     end.
 
+%% @doc Comment tag. Everything between {% comment %} and
+%%      {% endcomment %} is dropped from the document.
 comment(Parser, _Token) ->
     Parser2 = dtl_parser:skip_past(Parser, endcomment),
     Node = dtl_node:new("comment", fun (_, _) -> <<>> end),
     {ok, Node, Parser2}.
+
+%% @doc If/elif/else/endif tag.
+'if'(Parser, Token) ->
+    [_Cmd|Bits] = dtl_parser:split_token(Token),
+    Cond = parse_if(Parser, Bits),
+    {ok, Nodes, Parser2} = dtl_parser:parse(Parser, [elif, else, endif]),
+    CondBodies = [{Cond, Nodes}],
+    {NextToken, Parser3} = dtl_parser:next_token(Parser2),
+    {CondBodies2, Parser4} = if_elif_else(NextToken, Parser3, CondBodies),
+    Node = dtl_node:new("if", {?MODULE, render_if}),
+    Node2 = dtl_node:set_state(Node, CondBodies2),
+    Node3 = dtl_node:set_nodelist(Node2, [N || {_Cond, Ns} <- CondBodies2, N <- Ns]),
+    {ok, Node3, Parser4}.
+
+if_elif_else(Token = {_, <<"elif", _/binary>>}, Parser, CondBodies) ->
+    [_Cmd|Bits] = dtl_parser:split_token(Token),
+    Cond = parse_if(Parser, Bits),
+    {ok, Nodes, Parser2} = dtl_parser:parse(Parser, [elif, else, endif]),
+    {Next, Parser3} = dtl_parser:next_token(Parser2),
+    if_elif_else(Next, Parser3, [{Cond, Nodes}|CondBodies]);
+if_elif_else({_, <<"else">>}, Parser, CondBodies) ->
+    {ok, Nodes, Parser2} = dtl_parser:parse(Parser, [endif]),
+    {Next, Parser3} = dtl_parser:next_token(Parser2),
+    if_elif_else(Next, Parser3, [{undefined, Nodes}|CondBodies]);
+if_elif_else({_, <<"endif">>}, Parser, CondBodies) ->
+    {lists:reverse(CondBodies), Parser};
+if_elif_else(_, _, _) ->
+    {error, {if_tag, missing_endif}}.
+
+parse_if(Parser, Bits) ->
+    Mapped = mapped_tokens(Bits, [], Parser),
+    {CurrentToken, Pos} = if_next_token(Mapped, 1),
+    {}.
+
+%% Group "not in" as a single operator.
+mapped_tokens([<<"not">>|[<<"in">>|Ts]], Mapped, Parser) ->
+    mapped_tokens(Ts, [if_token(<<"not in">>, Parser)|Mapped], Parser);
+mapped_tokens([T|Ts], Mapped, Parser) ->
+    mapped_tokens(Ts, [if_token(T, Parser)|Mapped], Parser);
+mapped_tokens([], Mapped, _Parser) ->
+    lists:reverse(Mapped).
+
+-spec if_token(dtl_lexer:token(), dtl_parser:parser()) ->
+    if_bit().
+if_token(V, Parser) ->
+    case proplists:get_value(V, ?IF_OPERATORS) of
+        undefined -> {literal, 0, dtl_filter:parse(V, Parser)};
+        Op -> Op
+    end.
+
+if_next_token(Tokens, Pos) when length(Tokens) =< Pos ->
+    {?IF_END_TOKEN, Pos};
+if_next_token(Tokens, Pos) ->
+    {lists:nth(Pos, Tokens), Pos + 1}.
+
+render_if(Node, Ctx) ->
+    do_render_if(dtl_node:state(Node), Ctx, []).
+
+%% Evaluate each condition and render its node list if it evaluates to
+%% `true'. Render items with no condition ({% else %} blocks)
+%% automatically.
+do_render_if([{undefined, Nodes}|Conds], Ctx, Rendered) ->
+    {ok, Bin, Ctx2} = dtl_node:render_list(Nodes, Ctx),
+    do_render_if(Conds, Ctx2, [Bin|Rendered]);
+do_render_if([{Cond, Nodes}|Conds], Ctx, Rendered) ->
+    {Rendered2, Ctx2} = case if_cond_eval(Cond, Ctx) of
+        true ->
+            {ok, Bin, Ctx3} = dtl_node:render_list(Nodes, Ctx),
+            {[Bin|Rendered], Ctx3};
+        false ->
+            {Rendered, Ctx}
+    end,
+    do_render_if(Conds, Ctx2, Rendered2);
+do_render_if([], _Ctx, Rendered) ->
+    lists:reverse(Rendered).
+
+if_cond_eval(Cond, Ctx) ->
+    true.
+
+%%
+%% {% if %} operators.
+%%
+if_or(X, Y, Ctx) ->
+    if_true(dtl_filter:resolve_expr(X, Ctx))
+        or if_true(dtl_filter:resolve_expr(Y, Ctx)).
+
+if_and(X, Y, Ctx) ->
+    if_true(dtl_filter:resolve_expr(X, Ctx))
+        and if_true(dtl_filter:resolve_expr(Y, Ctx)).
+
+if_not(X, Ctx) ->
+    not if_true(dtl_filter:resolve_expr(X, Ctx)).
+
+if_in(X, Y, Ctx) ->
+    lists:member(dtl_filter:resolve_expr(X, Ctx),
+                 dtl_filter:resolve_expr(Y, Ctx)).
+
+if_not_in(X, Y, Ctx) -> not if_in(X, Y, Ctx).
+
+if_eq(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, ==, Ctx).
+if_exact_eq(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, =:=, Ctx).
+if_neq(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, /=, Ctx).
+if_exact_neq(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, =/=, Ctx).
+if_lt(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, <, Ctx).
+if_lte(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, =<, Ctx).
+if_gt(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, >, Ctx).
+if_gte(X, Y, Ctx) -> ?IF_RESOLVE(X, Y, >=, Ctx).
+
+if_true([]) -> false;
+if_true(0) -> false;
+if_true(0.0) -> false;
+if_true(<<>>) -> false;
+if_true(false) -> false;
+if_true(undefined) -> false;
+if_true({}) -> false;
+if_true(_) -> true.

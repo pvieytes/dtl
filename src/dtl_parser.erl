@@ -37,6 +37,7 @@
          find_filter/2,
          find_tag/2,
          new/1,
+         next_token/1,
          parse/1,
          parse/2,
          set_blocks/2,
@@ -181,3 +182,10 @@ blocks(#parser{blocks = Blocks}) ->
 -spec set_blocks(parser(), [binary()]) -> parser().
 set_blocks(Parser, Blocks) ->
     Parser#parser{blocks = Blocks}.
+
+%% @doc Returns the parser's next token to process, and the parser
+%%      without this token.
+-spec next_token(parser()) ->
+    {dtl_lexer:token(), parser()}.
+next_token(Parser = #parser{tokens = [T|Ts]}) ->
+    {T, Parser#parser{tokens = Ts}}.
