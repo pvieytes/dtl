@@ -45,9 +45,11 @@ run({Mod, Fun}, Parser, Token) ->
 -spec inclusion_tag(list(), module(), atom(), dtl_parser:parser(),
         dtl_lexer:token()) ->
     {ok, dtl_node:tnode(), dtl_parser:parser()}.
-inclusion_tag(Name, Mod, Fun, Parser, _Token) ->
-    %% TODO: Break up the token into args/options.
-    Args = Opts = [],
+inclusion_tag(Name, Mod, Fun, Parser, Token) ->
+    %% TODO: Break up the token into args/options correctly.
+    [_|Bits] = dtl_parser:split_token(Token),
+    Args = [dtl_filter:parse(B, Parser) || B <- Bits],
+    Opts = [],
     Node = dtl_node:new("inclusion_tag", {?MODULE, render_inclusion_tag}),
     {ok, Tpl} = case Name of
         [[_|_]|_] -> dtl_loader:select_template(Name);
@@ -61,6 +63,8 @@ inclusion_tag(Name, Mod, Fun, Parser, _Token) ->
     binary().
 render_inclusion_tag(Node, Ctx) ->
     {Mod, Fun, Args, Opts} = dtl_node:state(Node),
-    Ctx2 = dtl_context:update(Ctx, Mod:Fun(Args, Opts)),
+    RealArgs = [dtl_filter:resolve_expr(A, Ctx) || A <- Args],
+    RealOpts = [{K, dtl_filter:resolve_expr(V, Ctx)} || {K, V} <- Opts],
+    Ctx2 = dtl_context:update(Ctx, Mod:Fun(RealArgs, RealOpts)),
     {ok, Bin, Ctx3} = dtl_node:render_list(dtl_node:nodelist(Node), Ctx2),
     {Bin, Ctx3}.
