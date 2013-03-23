@@ -59,8 +59,10 @@
 new() -> new([]).
 
 %% @doc Creates a new template context with the provided data.
--spec new(list()) -> context().
-new(PList) ->
+-spec new(list() | context()) -> context().
+%% Identity function when provided as context.
+new(Ctx) when is_record(Ctx, ctx) -> Ctx;
+new(PList) when is_list(PList) ->
     Ctx = new_base(),
     Ctx2 = Ctx#ctx{render_context = new_base()},
     update(process_all(Ctx2), PList).
