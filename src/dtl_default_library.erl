@@ -610,7 +610,7 @@ render_for(Node, Ctx) ->
         From ->
             Ctx4 = dtl_context:set(Ctx2, forloop,
                                    [{parentloop, ParentLoop}]),
-            render_for_each(LoopNodes, From, Vars, length(Vars),
+            render_for_each(LoopNodes, From, Vars, length(From),
                             Reversed, Ctx4)
     end,
     {Bin, dtl_context:pop(Ctx3)}.
