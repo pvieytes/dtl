@@ -67,4 +67,4 @@ render_inclusion_tag(Node, Ctx) ->
     RealOpts = [{K, dtl_filter:resolve_expr(V, Ctx)} || {K, V} <- Opts],
     Ctx2 = dtl_context:update(Ctx, Mod:Fun(RealArgs, RealOpts)),
     {ok, Bin, Ctx3} = dtl_node:render_list(dtl_node:nodelist(Node), Ctx2),
-    {Bin, Ctx3}.
+    {Bin, dtl_context:pop(Ctx3)}.

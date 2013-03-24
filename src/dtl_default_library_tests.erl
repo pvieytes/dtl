@@ -77,7 +77,9 @@ if_tag_test_() ->
              {<<"The weather is sunny.">>,
               <<"{% if weather %}The weather is {{ weather }}.{% endif %}">>},
              {<<"neq">>, <<"{% if 2 =/= 3 %}neq{% endif %}">>}],
-    Ctx = dtl_context:new([{a, a}, {b, a}, {c, b},
+    Ctx = dtl_context:new([{a, a},
+                           {b, a},
+                           {c, b},
                            {weather, <<"sunny">>}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
@@ -89,7 +91,23 @@ ifequal_tag_test_() ->
               <<"{% ifequal a c %}true{% else %}false{% endifequal %}">>},
              {<<"true">>, <<"{% ifnotequal a c %}true{% endifnotequal %}">>},
              {<<"true">>, <<"{% ifequal a a %}true{% endifequal %}">>}],
-    Ctx = dtl_context:new([{a, a}, {b, a}, {c, b}]),
+    Ctx = dtl_context:new([{a, a},
+                           {b, a},
+                           {c, b}]),
+    dtl_tests:compare_templates(Tests, Ctx).
+
+forloop_test_() ->
+    Tests = [{<<"1234">>, <<"{% for n in l %}{{ n }}{% endfor %}">>},
+             {<<"0123">>, <<"{% for n in l %}{{ forloop.counter0 }}{% endfor %}">>},
+             {<<"Empty">>, <<"{% for n in l2 %}{{ n }}{% empty %}Empty{% endfor %}">>},
+             {<<"1">>, <<"{% for n in l3 %}{{ n }}{% empty %}Empty{% endfor %}">>},
+             {<<"Empty2">>, <<"{% for n in l99 %}{{ n }}{% empty %}Empty2{% endfor %}">>},
+             {<<"1,2:3,4">>, <<"{% for x, y in l4 %}{{ x }},{{ y }}{% if not forloop.last %}:{% endif %}{% endfor %}">>}],
+    Ctx = dtl_context:new([{l, [1, 2, 3, 4]},
+                           {l2, []},
+                           {l3, [1]},
+                           {l4, [[1, 2],
+                                 [3, 4]]}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
 

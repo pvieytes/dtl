@@ -208,11 +208,11 @@ Name|Implemented
 `csrf_token`|No
 `cycle`|No
 `debug`|No
-`extends`|No
+`extends`|Yes
 `filter`|No
 `firstof`|No
-`for`|No
-`for ... empty`|No
+`for`|Yes
+`for ... empty`|Yes
 `if`|Yes
 `ifchanged`|No
 `ifequal`|Yes

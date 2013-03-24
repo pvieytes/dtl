@@ -59,6 +59,7 @@
 -export([block/2, render_block/2,
          comment/2,
          extends/2, render_extends/2,
+         for/2, render_for/2,
          'if'/2, render_if/2,
          ifequal/2, ifnotequal/2, render_ifequal/2,
          load/2]).
@@ -82,6 +83,7 @@
 registered_tags() -> [block,
                       comment,
                       extends,
+                      for,
                       'if',
                       ifequal,
                       ifnotequal,
@@ -554,3 +556,94 @@ render_ifequal(Node, Ctx) ->
     end,
     {ok, Bin, Ctx2} = dtl_node:render_list(Nodes, Ctx),
     {Bin, Ctx2}.
+
+%% {% for %}
+for(Parser, Token) ->
+    case dtl_parser:split_token(Token) of
+        [_Cmd|BaseVars = [_, _, _|_]] ->
+            case lists:reverse(BaseVars) of
+                [<<"reversed">>, From, <<"in">>|Vars] ->
+                    do_for(From, Vars, true, Parser);
+                [From, <<"in">>|Vars] ->
+                    do_for(From, Vars, false, Parser);
+                _ ->
+                    {error, {badarg, for_tag}}
+            end;
+        _ ->
+            {error, {badarg, for_tag}}
+    end.
+
+do_for(From, RawVars, Reversed, Parser) ->
+    VarNames = [binary_to_list(V) || V <- lists:reverse(RawVars)],
+    Vars = re:split(string:join(VarNames, " "), " *, *", [{return, binary}]),
+    %% Django validates that arguments do not contain spaces or are
+    %% empty strings here.
+    FromExpr = dtl_filter:parse(From, Parser),
+    {ok, LoopNodes, Parser2} = dtl_parser:parse(Parser, [empty, endfor]),
+    {EmptyNodes, Parser3} = case dtl_parser:next_token(Parser2) of
+        {{_, <<"empty">>}, Parser4} ->
+            {ok, Empty, Parser5} = dtl_parser:parse(Parser4, [endfor]),
+            {Empty, dtl_parser:delete_first_token(Parser5)};
+        {_, Parser4} ->
+            {[], Parser4}
+    end,
+    Nodes = [N || NL <- [LoopNodes, EmptyNodes], N <- NL],
+    Node = dtl_node:new("for", {?MODULE, render_for}),
+    Node2 = dtl_node:set_nodelist(Node, Nodes),
+    Node3 = dtl_node:set_state(Node2, {Vars, FromExpr, Reversed,
+                                       LoopNodes, EmptyNodes}),
+    {ok, Node3, Parser3}.
+
+render_for(Node, Ctx) ->
+    {Vars, FromExpr, Reversed, LoopNodes,
+     EmptyNodes} = dtl_node:state(Node),
+    ParentLoop = case dtl_context:fetch(Ctx, forloop) of
+        undefined -> [];
+        P -> P
+    end,
+    Ctx2 = dtl_context:push(Ctx),
+    {Bin, Ctx3} = case dtl_filter:resolve_expr(FromExpr, Ctx2) of
+        undefined ->
+            render_for_empty(EmptyNodes, Ctx2);
+        [] ->
+            render_for_empty(EmptyNodes, Ctx2);
+        From ->
+            Ctx4 = dtl_context:set(Ctx2, forloop,
+                                   [{parentloop, ParentLoop}]),
+            render_for_each(LoopNodes, From, Vars, length(Vars),
+                            Reversed, Ctx4)
+    end,
+    {Bin, dtl_context:pop(Ctx3)}.
+
+render_for_empty(Nodes, Ctx) ->
+    {ok, Bin, Ctx2} = dtl_node:render_list(Nodes, Ctx),
+    {Bin, Ctx2}.
+
+render_for_each(Nodes, From, Vars, NVars, true, Ctx) ->
+    render_for_each(lists:reverse(Nodes), From, Vars, NVars, Ctx, 0, []);
+render_for_each(Nodes, From, Vars, NVars, false, Ctx) ->
+    render_for_each(Nodes, From, Vars, NVars, Ctx, 0, []).
+
+render_for_each(_Nodes, [], _Vars, _NVars, Ctx, _I, Bins) ->
+    {lists:reverse(Bins), Ctx};
+render_for_each(Nodes, [Iter|From], Vars, NVars, Ctx, I, Bins) ->
+    LoopVars = case Vars of
+        [V] ->
+            [{raw_var_to_term(V), Iter}];
+        _ ->
+            lists:zip([raw_var_to_term(V) || V <- Vars], Iter)
+    end,
+    LoopCtx = dtl_context:new([
+        {counter0, I},
+        {counter, I + 1},
+        {revcounter, NVars - I},
+        {revcounter0, NVars - I - 1},
+        {first, I =:= 0},
+        {last, I =:= NVars - 1}
+    ]),
+    Ctx2 = dtl_context:update(Ctx, [{forloop, LoopCtx}|LoopVars]),
+    {ok, Bin, Ctx3} = dtl_node:render_list(Nodes, Ctx2),
+    render_for_each(Nodes, From, Vars, NVars, dtl_context:pop(Ctx3), I + 1, [Bin|Bins]).
+
+raw_var_to_term(V) ->
+    list_to_atom(binary_to_list(V)).
