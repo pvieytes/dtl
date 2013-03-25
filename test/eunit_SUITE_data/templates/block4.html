@@ -1,0 +1,9 @@
+{% extends "layout3.html" %}
+
+{% load dtl_default_library_tests %}
+
+{% block content %}
+  {% for item in items %}
+    {% render_item item %}
+  {% endfor %}
+{% endblock %}

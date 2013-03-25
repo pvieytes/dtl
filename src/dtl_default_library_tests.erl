@@ -29,6 +29,7 @@
          registered_tags/0]).
 
 -export([make_cat/1,
+         render_item/2,
          wc/2,
          wc_render/2]).
 
@@ -49,9 +50,15 @@ block_tag_test() ->
     {ok, Out2} = dtl:render("block2.html"),
     {ok, Expected3} = dtl_loader:find_template("block-out3.html"),
     {ok, Out3} = dtl:render("block3.html"),
+    {ok, Expected4} = dtl_loader:find_template("block-out4.html"),
+    {ok, Out4} = dtl:render("block4.html", [
+        {items, [1, 2, 3, 4]},
+        {item_label, <<"Item">>}
+    ]),
     ?assertEqual(Expected, Out),
     ?assertEqual(Expected2, Out2),
-    ?assertEqual(Expected3, Out3).
+    ?assertEqual(Expected3, Out3),
+    ?assertEqual(Expected4, Out4).
 
 filter_test_() ->
     Ctx = dtl_context:new([{ quotes, <<"'\"\\">>}]),
@@ -111,7 +118,8 @@ forloop_test_() ->
                            {l2, []},
                            {l3, [1]},
                            {l4, [[1, 2],
-                                 [3, 4]]}]),
+                                 [3, 4]]},
+                           {a, <<"A">>}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
 ifchanged_test_() ->
@@ -123,7 +131,7 @@ ifchanged_test_() ->
 
 %% dtl_library (for {% load %} tests).
 registered_filters() -> [make_cat].
-registered_tags() -> [wc].
+registered_tags() -> [render_item, wc].
 
 %%
 %% Filters
@@ -148,3 +156,12 @@ wc_render(Node, Ctx) ->
         {match, Ms} -> length(Ms)
     end,
     list_to_binary(integer_to_list(Wc)).
+
+render_item(Parser, Token) ->
+    [_, RawItem] = dtl_parser:split_token(Token),
+    Item = dtl_filter:parse(RawItem, Parser),
+    {ok, dtl_node:new("render_item", fun (_Node, Ctx) ->
+        Label = dtl_context:fetch(Ctx, item_label),
+        ItemVal = integer_to_binary(dtl_filter:resolve_expr(Item, Ctx)),
+        <<"<p>", Label/binary, ": ", ItemVal/binary, "</p>">>
+     end), Parser}.
