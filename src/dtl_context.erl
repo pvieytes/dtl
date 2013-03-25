@@ -38,7 +38,9 @@
          render_context/1,
          render_fetch/2,
          render_fetch/3,
+         set/2,
          set/3,
+         set_ref/3,
          set_render_context/2,
          update/2]).
 
@@ -78,12 +80,12 @@ process_all(BaseCtx) ->
         update(Ctx, M:F())
     end, BaseCtx, dtl:setting(context_processors)).
 
-%% @doc Pushes a new dict on the stack.
+%% @doc Pushes a new dict on the context stack.
 -spec push(context()) -> context().
 push(Ctx = #ctx{stack = Stack}) ->
     Ctx#ctx{stack = [dict:new()|Stack]}.
 
-%% @doc Pops a dict off of the stack.
+%% @doc Pops a dict off of the context stack.
 -spec pop(context()) -> context().
 pop(Ctx = #ctx{stack = [_|Stack]}) ->
     Ctx#ctx{stack = Stack};
@@ -91,28 +93,43 @@ pop(Ctx = #ctx{stack = [_|Stack]}) ->
 %% it matters.
 pop(Ctx = #ctx{stack = []}) -> Ctx.
 
-%% @doc Sets a value on the stack.
+%% @doc Set many values at once on the context.
+-spec set(context(), [{term(), term()}]) -> context().
+set(Ctx, PList) ->
+    lists:foldl(fun ({K, V}, Ctx2) -> set(Ctx2, K, V) end, Ctx, PList).
+
+%% @doc Sets a value on the context.
 -spec set(context(), term(), term()) -> context().
 set(Ctx = #ctx{stack = [Head|Stack]}, K, V) ->
     Ctx#ctx{stack = [dict:store(K, V, Head)|Stack]};
 set(Ctx = #ctx{stack = []}, K, V) ->
     set(push(Ctx), K, V).
 
+set_ref(Ctx = #ctx{stack = Stack}, K, V) ->
+    Ctx#ctx{stack = set_ref_stack(Stack, K, V, [])}.
+
+set_ref_stack([H|Stack], K, V, Heads) ->
+    case dict:find(K, H) of
+        error -> set_ref_stack(Stack, K, V, [H|Heads]);
+        {ok, _Ref} ->
+            lists:reverse(Heads) ++ [dict:store(K, V, H)|Stack]
+    end;
+set_ref_stack([], K, V, Heads) ->
+    [H|Heads2] = lists:reverse(Heads),
+    [dict:store(K, V, H)|Heads2].
+
 %% @doc Set many values on a context at once.
 -spec update(context(), [{term(), term()}]) -> context().
 update(Ctx, PList) ->
-    Ctx2 = push(Ctx),
-    lists:foldl(fun ({K, V}, Ctx3) ->
-        set(Ctx3, K, V)
-    end, Ctx2, PList).
+    set(push(Ctx), PList).
 
-%% @doc Looks up a value on all stacks, in top-to-bottom order.
+%% @doc Looks up a value on all context stacks, in top-to-bottom order.
 -spec fetch(context(), term()) -> {ok, term()} | undefined.
 fetch(#ctx{stack = []}, _K) -> undefined;
 fetch(#ctx{stack = Stack}, K) -> fetch_stack(Stack, K).
 
-%% Fetches a value from context stack, trying each in order from bottom
-%% to top.
+%% Fetches a value from the context stack, trying each in order from
+%% bottom to top.
 -spec fetch_stack(list(), term()) -> {ok, term()} | undefined.
 fetch_stack([Head|Stack], K) ->
     case dict:find(K, Head) of
@@ -121,7 +138,7 @@ fetch_stack([Head|Stack], K) ->
     end;
 fetch_stack([], _K) -> undefined.
 
-%% @doc Looks up a value on all stacks, in top-to-bottom order,
+%% @doc Looks up a value on all context stacks, in top-to-bottom order,
 %%      returning the default value if none is found.
 -spec fetch(context(), term(), term()) -> term().
 fetch(Ctx, K, Def) ->
@@ -131,8 +148,8 @@ fetch(Ctx, K, Def) ->
     end.
 
 %% @doc Render contexts have different scope rules: Only look at the
-%%      head of the stack. End users shouldn't have much reason to use
-%%      this function.
+%%      head of the context stack. End users shouldn't have much reason
+%%      to use this function.
 %%      
 %%      Returns `undefined' if the key is not defined on the render
 %%      context.
@@ -150,8 +167,12 @@ render_fetch(Ctx, K, Def) ->
         {ok, V} -> V
     end.
 
+%% @doc Return the template rendering context from the provided context.
+-spec render_context(context()) -> context().
 render_context(#ctx{render_context = RenderCtx}) ->
     RenderCtx.
 
+%% @doc Sets the template rendering on the provided context.
+-spec set_render_context(context(), context()) -> context().
 set_render_context(Ctx, RenderCtx) ->
     Ctx#ctx{render_context = RenderCtx}.

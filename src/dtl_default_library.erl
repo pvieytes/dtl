@@ -61,6 +61,7 @@
          extends/2, render_extends/2,
          for/2, render_for/2,
          'if'/2, render_if/2,
+         ifchanged/2, render_ifchanged/2,
          ifequal/2, ifnotequal/2, render_ifequal/2,
          load/2]).
 
@@ -85,6 +86,7 @@ registered_tags() -> [block,
                       extends,
                       for,
                       'if',
+                      ifchanged,
                       ifequal,
                       ifnotequal,
                       load].
@@ -522,11 +524,13 @@ ifnotequal(Parser, Token) ->
 do_ifequal(Parser, Token, Equal, End) ->
     case dtl_parser:split_token(Token) of
         [_Cmd, X, Y] ->
-            {ok, TrueNodes, Parser2} = dtl_parser:parse(Parser, [else, End]),
+            {ok, TrueNodes, Parser2} = dtl_parser:parse(Parser,
+                                                        [else, End]),
             {{_, Bin}, Parser3} = dtl_parser:next_token(Parser2),
             {FalseNodes, Parser4} = case Bin of
                 <<"else">> ->
-                    {ok, Ns, Parser5} = dtl_parser:parse(Parser3, [End]),
+                    {ok, Ns, Parser5} = dtl_parser:parse(Parser3,
+                                                         [End]),
                     {Ns, dtl_parser:delete_first_token(Parser5)};
                 _ ->
                     {[], Parser3}
@@ -557,7 +561,7 @@ render_ifequal(Node, Ctx) ->
     {ok, Bin, Ctx2} = dtl_node:render_list(Nodes, Ctx),
     {Bin, Ctx2}.
 
-%% {% for %}
+%% {% for %}.
 for(Parser, Token) ->
     case dtl_parser:split_token(Token) of
         [_Cmd|BaseVars = [_, _, _|_]] ->
@@ -575,11 +579,13 @@ for(Parser, Token) ->
 
 do_for(From, RawVars, Reversed, Parser) ->
     VarNames = [binary_to_list(V) || V <- lists:reverse(RawVars)],
-    Vars = re:split(string:join(VarNames, " "), " *, *", [{return, binary}]),
+    Vars = re:split(string:join(VarNames, " "), " *, *",
+                    [{return, binary}]),
     %% Django validates that arguments do not contain spaces or are
     %% empty strings here.
     FromExpr = dtl_filter:parse(From, Parser),
-    {ok, LoopNodes, Parser2} = dtl_parser:parse(Parser, [empty, endfor]),
+    {ok, LoopNodes, Parser2} = dtl_parser:parse(Parser,
+                                                [empty, endfor]),
     {EmptyNodes, Parser3} = case dtl_parser:next_token(Parser2) of
         {{_, <<"empty">>}, Parser4} ->
             {ok, Empty, Parser5} = dtl_parser:parse(Parser4, [endfor]),
@@ -608,8 +614,9 @@ render_for(Node, Ctx) ->
         [] ->
             render_for_empty(EmptyNodes, Ctx2);
         From ->
-            Ctx4 = dtl_context:set(Ctx2, forloop,
-                                   [{parentloop, ParentLoop}]),
+            ForCtx = dtl_context:fetch(Ctx, forloop, dtl_context:new()),
+            ForCtx2 = dtl_context:set(ForCtx, parentloop, ParentLoop),
+            Ctx4 = dtl_context:set(Ctx2, forloop, ForCtx2),
             render_for_each(LoopNodes, From, Vars, length(From),
                             Reversed, Ctx4)
     end,
@@ -633,17 +640,75 @@ render_for_each(Nodes, [Iter|From], Vars, NVars, Ctx, I, Bins) ->
         _ ->
             lists:zip([raw_var_to_term(V) || V <- Vars], Iter)
     end,
-    LoopCtx = dtl_context:new([
+    ForCtx = dtl_context:fetch(Ctx, forloop, dtl_context:new()),
+    Ctx2 = dtl_context:set(Ctx, forloop, dtl_context:set(ForCtx, [
         {counter0, I},
         {counter, I + 1},
         {revcounter, NVars - I},
         {revcounter0, NVars - I - 1},
         {first, I =:= 0},
         {last, I =:= NVars - 1}
-    ]),
-    Ctx2 = dtl_context:update(Ctx, [{forloop, LoopCtx}|LoopVars]),
-    {ok, Bin, Ctx3} = dtl_node:render_list(Nodes, Ctx2),
-    render_for_each(Nodes, From, Vars, NVars, dtl_context:pop(Ctx3), I + 1, [Bin|Bins]).
+    ])),
+    Ctx3 = dtl_context:update(Ctx2, LoopVars),
+    {ok, Bin, Ctx4} = dtl_node:render_list(Nodes, Ctx3),
+    render_for_each(Nodes, From, Vars, NVars, dtl_context:pop(Ctx4),
+                    I + 1, [Bin|Bins]).
 
 raw_var_to_term(V) ->
     list_to_atom(binary_to_list(V)).
+
+%% {% ifchanged %}.
+ifchanged(Parser, Token) ->
+    [_|Bits] = dtl_parser:split_token(Token),
+    {ok, TrueNodes, Parser2} = dtl_parser:parse(Parser,
+                                                [else, endifchanged]),
+    {FalseNodes, Parser3} = case dtl_parser:next_token(Parser2) of
+        {{_, <<"else">>}, Parser4} ->
+            {ok, Empty, Parser5} = dtl_parser:parse(Parser4,
+                                                    [endifchanged]),
+            {Empty, dtl_parser:delete_first_token(Parser5)};
+        {_, Parser4} ->
+            {[], Parser4}
+    end,
+    Nodes = [N || NL <- [TrueNodes, FalseNodes], N <- NL],
+    Values = [dtl_filter:parse(Bit) || Bit <- Bits],
+    Node = dtl_node:new("ifchanged", {?MODULE, render_ifchanged}),
+    Node2 = dtl_node:set_nodelist(Node, Nodes),
+    Node3 = dtl_node:set_state(Node2, {make_ref(), Values, TrueNodes,
+                                       FalseNodes}),
+    {ok, Node3, Parser3}.
+
+render_ifchanged(Node, Ctx) ->
+    {Ref, Values, TrueNodes, FalseNodes} = dtl_node:state(Node),
+    {Cur, Ctx2} = case Values of
+        [] ->
+            {ok, CurBin, Ctx3} = dtl_node:render_list(TrueNodes, Ctx),
+            {CurBin, Ctx3};
+        _ ->
+            {[dtl_filter:resolve_expr(V, Ctx) || V <- Values], Ctx}
+    end,
+    case ifchanged_changed(Ref, Cur, Ctx2) of
+        {true, Ctx4} ->
+            {ok, Bin, Ctx5} = dtl_node:render_list(TrueNodes, Ctx4),
+            {Bin, Ctx5};
+        {false, Ctx4} ->
+            case FalseNodes of
+                [] ->
+                    {<<>>, Ctx4};
+                _ ->
+                    {ok, Bin, Ctx5} = dtl_node:render_list(FalseNodes,
+                                                           Ctx4),
+                    {Bin, Ctx5}
+            end
+    end.
+
+ifchanged_changed(Ref, Cur, Ctx) ->
+    ForCtx = dtl_context:fetch(Ctx, forloop),
+    Old = dtl_context:fetch(ForCtx, Ref),
+    ForCtx2 = dtl_context:set(ForCtx, Ref, Cur),
+    Ctx2 = dtl_context:set_ref(Ctx, forloop, ForCtx2),
+    Changed = case Old of
+        undefined -> true;
+        _ -> Old =/= Cur
+    end,
+    {Changed, Ctx2}.

@@ -214,7 +214,7 @@ Name|Implemented
 `for`|Yes
 `for ... empty`|Yes
 `if`|Yes
-`ifchanged`|No
+`ifchanged`|Yes
 `ifequal`|Yes
 `ifnotequal`|Yes
 `include`|No

@@ -114,6 +114,12 @@ forloop_test_() ->
                                  [3, 4]]}]),
     dtl_tests:compare_templates(Tests, Ctx).
 
+ifchanged_test_() ->
+    Tests = [{<<"123">>, <<"{% for n in l %}{% ifchanged %}{{ n }}{% endifchanged %}{% endfor %}">>},
+             {<<"1...2..3">>, <<"{% for n in l2 %}{% ifchanged %}{{ n }}{% else %}.{% endifchanged %}{% endfor %}">>}],
+    Ctx = dtl_context:new([{l, [1, 1, 2, 2, 3, 3, 3]},
+                           {l2, [1, 1, 1, 1, 2, 2, 2, 3]}]),
+    dtl_tests:compare_templates(Tests, Ctx).
 
 %% dtl_library (for {% load %} tests).
 registered_filters() -> [make_cat].
