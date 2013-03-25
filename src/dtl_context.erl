@@ -105,6 +105,9 @@ set(Ctx = #ctx{stack = [Head|Stack]}, K, V) ->
 set(Ctx = #ctx{stack = []}, K, V) ->
     set(push(Ctx), K, V).
 
+%% @doc Directly set a variable on the first context stack where it is
+%%      stored.
+-spec set_ref(context(), term(), term()) -> context().
 set_ref(Ctx = #ctx{stack = Stack}, K, V) ->
     Ctx#ctx{stack = set_ref_stack(Stack, K, V, [])}.
 
