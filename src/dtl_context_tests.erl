@@ -45,21 +45,15 @@ base_context_test_() ->
      ?_assertEqual(5, dtl_context:fetch(Ctx4, a)),
      ?_assertEqual(2, dtl_context:fetch(Ctx4, b))].
 
-context_processor_test_() ->
-    {setup,
-     fun () ->
-         dtl_ets_settings:set(context_processors, [
-             {dtl_context_tests, example_processor},
-             {dtl_context_tests, example_processor2}
-         ])
-     end,
-     fun (_) ->
-         dtl_ets_settings:clear()
-     end,
-     fun () ->
-         Ctx = dtl_context:new([{z, 9}]),
-         [?_assertEqual(20, dtl_context:fetch(Ctx, x)),
-          ?_assertEqual(8, dtl_context:fetch(Ctx, b)),
-          ?_assertEqual(20, dtl_context:fetch(Ctx, x)),
-          ?_assertEqual(undefined, dtl_context:fetch(Ctx, y))]
-     end}.
+context_processor_test() ->
+    dtl_ets_settings:set(context_processors, [
+        {dtl_context_tests, example_processor},
+        {dtl_context_tests, example_processor2}
+    ]),
+    Ctx = dtl_context:new([{z, 12}]),
+    ?assertEqual(20, dtl_context:fetch(Ctx, x)),
+    ?assertEqual(8, dtl_context:fetch(Ctx, b)),
+    ?assertEqual(20, dtl_context:fetch(Ctx, x)),
+    ?assertEqual(12, dtl_context:fetch(Ctx, z)),
+    ?assertEqual(undefined, dtl_context:fetch(Ctx, y)),
+    dtl_ets_settings:clear().
