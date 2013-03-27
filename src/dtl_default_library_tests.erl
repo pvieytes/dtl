@@ -162,6 +162,6 @@ render_item(Parser, Token) ->
     Item = dtl_filter:parse(RawItem, Parser),
     {ok, dtl_node:new("render_item", fun (_Node, Ctx) ->
         Label = dtl_context:fetch(Ctx, item_label),
-        ItemVal = integer_to_binary(dtl_filter:resolve_expr(Item, Ctx)),
+	ItemVal = list_to_binary(integer_to_list(dtl_filter:resolve_expr(Item, Ctx))),
         <<"<p>", Label/binary, ": ", ItemVal/binary, "</p>">>
      end), Parser}.
