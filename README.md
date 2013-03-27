@@ -66,7 +66,7 @@ Name|Type|Default|Description
 `apps`|`[atom()]`|`[]`|A list of application names that will be searched in left-to-right order by `dtl_apps_loader` if enabled.
 `context_processors`|`[{module(), atom()}]`|`[]`|List of `{Mod, Fun}` tuples that are called in left-to-right order to populate all new `dtl_context:context()` records.
 `debug`|`boolean()`|`false`|Set `true` to enable debugging aids, `false` otherwise.
-`empty_term_replacement`|`binary(]`|`<<>>`|Binary that will replace any `undefined` terms in templates. `<<"None">>` and `<<"undefined">>` are also good ones.
+`empty_term_replacement`|`binary()`|`<<>>`|Binary that will replace any `undefined` terms in templates. `<<"None">>` and `<<"undefined">>` are also good ones.
 `settings_module`|`module()`|`dtl_app_config_settings`|Module used to look up settings, must implement `dtl_settings`.
 `template_dirs`|`[list()]`|`["priv/templates"]`|Template directories that `dtl_fs_loader` (if enabled) will search, from left. Paths can be absolute or relative.
 `template_loaders`|`[module()]`|`[dtl_fs_loader, dtl_apps_loader]`|List of modules implementing the `dtl_loader` interface. These are used to look up templates at runtime.
