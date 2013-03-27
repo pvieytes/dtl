@@ -36,7 +36,7 @@
 
 SHELL := bash
 PROGRAM = dtl
-REBAR ?= rebar
+REBAR ?= ./rebar
 DEPS = deps
 
 all: program
